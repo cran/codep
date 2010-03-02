@@ -1,0 +1,11 @@
+41924698df54046104aff37601efb662 *DESCRIPTION
+eb80d4f36595e8c461d8f8685c030140 *NAMESPACE
+cc268923e847d94e31d65fc80e0611ad *R/mca.R
+ca078b2aced36e6be43d5d6a24892a96 *R/mevmap.R
+063615d0666f112bae3edb7327158c6c *data/Salmon.rda
+4bb7d2bde6be3880856dda9cbb354007 *man/Salmon.Rd
+22a94201a1d4d4ef1fb4797fb87516a5 *man/cthreshold.Rd
+907639a2a6db28be9352e687ba08cf2c *man/mca.Rd
+c2e9de7a7b135e314a3d150d24060879 *man/mevmap.Rd
+af3b38b1908d83c1918e5ef7db663d11 *man/minpermute.Rd
+28d3225d8dffbb2171fd78027449c86e *src/permut.c
