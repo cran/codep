@@ -1,34 +1,31 @@
-% --- Source file: ./man/Salmon.Rd ---
-% File src/library/codep/man/Salmon.Rd
-% Part of the R package, http://www.R-project.org
-% Copyright 2009 Guenard, Guillaume and Legendre, Pierre
-% Distributed under GPL 2 or later
+\encoding{utf8}
 \name{Salmon}
+\docType{data}
 \alias{Salmon}
-\title{St-Marguerite Juvenile Atlantic salmon (parr) dataset.}
+\title{Juvenile Atlantic salmon (parr) density in St-Marguerite river,
+  Québec, Canada}
 \description{
-  A 1520m transect of the St-Marguerite River, Quebec, Canada.
+  A 1520m transect of the St-Marguerite River.
 }
-\usage{
-data(Salmon)
-}
-\format{
-  A 76 x 5 dataframe.
-}
+\usage{Salmon}
+\format{ A 76 rows by  5 columns \code{\link{data.frame}}. }
 \details{
-  Contains (1) the position on the segment upstream site
-  \sQuote{Bardsville} (48d23m01.59s N ; 70d12m10.05s W), (2) the
-  number of Parr (age I+ and II+) observed in the segment, (3) the
-  mean water depth estimated across the segment (m), (4) the mean
-  current velocity estimated across the segment (m/s), and (5) The
-  mean substrate size (mm). Water depth, current velocity, and mean
-  substrate size were estimates in 76 segments of 20m. Sampling took
-  place on 7 July 2002.
+  Contains (1) the 76 sampling site positions along a 1520 m river
+  segment beginning at a location called \sQuote{Bardsville} (Lat:
+  48°23'01.59'' N ; Long: 70°12'10.05'' W), (2) the number of parr
+  (young salmon, ages I+ and II+) observed at the sampling sites, (3)
+  the mean water depths (m), (4) the mean current velocity (m/s), and
+  (5) the mean substrate size (mm). Sampling took place on July 7, 2002,
+  in the 76 sites, each 20 m long. The \sQuote{Bardsville} river segment
+  is located in the upper portion of  Sainte-Marguerite River, Quebec,
+  Canada.
 }
+\source{ Daniel Boisclair, Département de sciences biologiques,
+  Université de Montréal, Montréal, Québec, Canada. }
 \references{
-  Guenard, G., Legendre, P., Boisclair, D., and Bilodeau, M. In press.
+  Guénard, G., Legendre, P., Boisclair, D., and Bilodeau, M. 2010.
   Multiscale codependence analysis: an integrated approach to analyse
-  relationships. Ecology
+  relationships across scales. Ecology 91: 2952-2964
 }
 \seealso{
   Bouchard, J. and Boisclair, D. 2008. The relative importance of local,
@@ -37,6 +34,6 @@ data(Salmon)
 }
 \examples{
 data(Salmon)
+summary(Salmon)
 }
-\author{ Daniel Boisclair, Departement de sciences biologiques,
-  Universite de Montreal, Montreal, Quebec, Canada. }
+\keyword{ Salmon }

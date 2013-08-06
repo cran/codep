@@ -1,14 +1,10 @@
-% --- Source file: ./man/cthreshold.Rd ---
-% File src/library/codep/man/cthreshold.Rd
-% Part of the R package, http://www.R-project.org
-% Copyright 2009 Guenard, Guillaume and Legendre, Pierre
-% Distributed under GPL 2 or later
+\encoding{utf8}
 \name{cthreshold}
 \alias{cthreshold}
 \title{ Familywise type I error rate }
 \description{
-  Function to calculate the testwise type I error rate threshold that
-  corresponds to a give familywise threshold.
+  Function to calculate the testwise type I error rate threshold
+  corresponding to a give familywise threshold.
 }
 \usage{
 cthreshold(alpha, nbtest)
@@ -46,7 +42,7 @@ cthreshold(alpha, nbtest)
 }
 \examples{
 # For a familywise threshold of 5\% with 5 tests:
-cthreshold(c(0.05),5)   # Threshold of each test is 0.01020622
+cthreshold(c(0.05),5)   # The corrected threshold for each test is 0.01020622
 }
-\author{ Guillaume Guenard, Laboratoire evolution et diversite
-  biologique, CNRS / Universite Paul-Sabatier, Toulouse, France. }
+\author{ Guillaume Guénard, Département des sciences biologiques,
+  Université de Montréal, Montréal, Québec, Canada. }
