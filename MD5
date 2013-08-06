@@ -1,9 +1,8 @@
-0f768d5babe000afb56f55466b578610 *DESCRIPTION
+065af9f2a643e519c81e894339ba78ba *DESCRIPTION
 c5f8f5a5595ebd63d1abdf8b141abd54 *NAMESPACE
 6edbd509e06134f1d8ce800cad14e965 *R/eigenmap.R
 62105271cd049842842c62e273d55304 *R/mca.R
 063615d0666f112bae3edb7327158c6c *data/Salmon.rda
-3930114a7c55133e2bfd668aa0cf1be0 *include/permut.h
 679a0fd7b776cf48641b81567e7885ad *man/Salmon.Rd
 10e9fbc3d25a2e58a144c99716195c2d *man/codep-package.Rd
 169214b54321de9cb4aa6f3d0a97050a *man/cthreshold.Rd
@@ -12,4 +11,5 @@ c5f8f5a5595ebd63d1abdf8b141abd54 *NAMESPACE
 ada5f8010bc3bdab2412e77f2258b845 *man/mca-class.Rd
 ff11b45b15d7cadd64a5ddbed8cb6fbe *man/mca.Rd
 406688804ba4f9c5382617074184c774 *man/minpermute.Rd
-84366c1a4af6b093a2a23db9fb134a9e *src/permut.c
+0b35bba1eef55f83a3ca71dee074fcc9 *src/permut.c
+3930114a7c55133e2bfd668aa0cf1be0 *src/permut.h

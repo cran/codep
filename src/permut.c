@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <Rinternals.h>
 #include <Rdefines.h>
-#include "../include/permut.h"
+#include "permut.h"
 
 #ifdef	__cplusplus
 extern "C" {
