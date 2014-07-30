@@ -53,7 +53,11 @@
   necessary to calculate \code{\link{MCA}}. It returns a
   \code{\link{eigenmap-class}} object. The package also features methods
   to print (\code{\link{print.eigenmap}}) and plot
-  (\code{\link{plot.eigenmap}}) these objects.
+  (\code{\link{plot.eigenmap}}) these objects. Function
+  \code{\link{eigenmap.score}} can be used to make predictions for
+  spatial models built from the eigenfunctions of \code{\link{eigenmap}}
+  using distances between one or more target locations and the sampled
+  locations for which the spatial eigenvector map was built.
   
   The package also features an examplary dataset \code{\link{Salmon}}
   containing  76 sampling site positions along a 1520 m river segment as

@@ -60,7 +60,7 @@ permute.mca(mcaobj, permute = NA, alpha = 0.05, max.step = Inf)
 ### Example 1: Atlantic salmon in the St-Marguerite river, Quebec, Canada.
 #
 data(Salmon)
-map <- eigenmap(x=Salmon[,"Position"],truncate=c(0,20),wf="binary")
+map <- eigenmap(x=Salmon[,"Position"],weighting=Wf.binary,boundaries=c(0,20))
 mca1 <- MCA(y=log(Salmon[,"Abundance"]+1),x=Salmon[,"Substrate"],emobj=map)
 mca1
 plot(mca1)
@@ -94,7 +94,7 @@ residuals(mcapermute1)
 ## Requires package vegan
 library(vegan)
 data(mite.xy)
-map <- eigenmap(x=as.matrix(mite.xy),truncate=c(0,NA),wf="Drayf1")
+map <- eigenmap(x=as.matrix(mite.xy),weighting=Wf.Drayf1)
 data(mite)
 data(mite.env)
 mca2 <- MCA(y=log(mite[,"LRUG"]+1),x=mite.env[,"WatrCont"],emobj=map)
