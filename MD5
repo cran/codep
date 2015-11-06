@@ -1,8 +1,8 @@
-53d0014ff4fc770fca5f581902b8f42b *DESCRIPTION
-41db4dfb6556344ee949bb1db4b3b7c4 *NAMESPACE
+45a27fd5474e13604e8887991010541f *DESCRIPTION
+d7ede40d3e7f84928ccf5284fa495304 *NAMESPACE
 6677fff17aa48890ccdf7e59ab675c12 *R/eigenmap.R
 b7aa25e10b654451b78ec78489944a3c *R/gcd.R
-62105271cd049842842c62e273d55304 *R/mca.R
+f02bf76ec5c3f51f0e3c01a5c692bdbf *R/mca.R
 063615d0666f112bae3edb7327158c6c *data/Salmon.rda
 679a0fd7b776cf48641b81567e7885ad *man/Salmon.Rd
 b1708eb01b77daa5678951e8133e9bc4 *man/codep-package.Rd
@@ -10,8 +10,9 @@ b1708eb01b77daa5678951e8133e9bc4 *man/codep-package.Rd
 8479265dd7a26e946ed0f078ec227d48 *man/eigenmap-class.Rd
 cf972994e7dc26b7c41e8f96973bc915 *man/eigenmap.Rd
 62507a86f825ec72d19c0d6d340e6f54 *man/gcd.Rd
-ada5f8010bc3bdab2412e77f2258b845 *man/mca-class.Rd
+3ba360ba0aacd0204fee1eca5d03a3a6 *man/mca-class.Rd
 03f276993a95dbbdf51a80f973d2d3a5 *man/mca.Rd
 406688804ba4f9c5382617074184c774 *man/minpermute.Rd
-241b459a89b8858bc24f95e5cbc2e5b0 *src/permut.c
-3930114a7c55133e2bfd668aa0cf1be0 *src/permut.h
+4394aa8988308aa67fc8910251a95147 *man/product-distribution.Rd
+98c4342fb12f4fa91d00079bee33d88b *src/codep.c
+be585e8aa47d367b7d5f1db4c25468a2 *src/codep.h

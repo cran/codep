@@ -5,6 +5,43 @@ minpermute <- function(alpha,nbtest,margin=1,ru=3) {
   return(round(floor(margin*(1-(1-alpha)^(nbtest^-1))^-1),-ru)+(10^ru)-1)
 }
 #
+dtau <- function(x, nu, tol = .Machine$double.eps ^ 0.5) {
+  res <- numeric(length(x))
+  nu <- rep(nu, length.out = length(x))
+  # Integrand function to be integrated over positive real numbers.
+  f <- function(z, x, nu)
+    dt(z, nu) * dt(x / z, nu) / z   # abs(z) always == z for real positive.
+  # The integrand being symmetric, only the positive is integrated and the result multiplied by two.
+  for(i in 1L:length(x))
+    res[i] <- 2 * integrate(f, lower = 0, upper = Inf, x = x[i], nu = nu[i], rel.tol = tol)$value
+  res
+}
+#
+ptau <- function(q, nu, lower.tail = TRUE, tol = .Machine$double.eps^0.5) {
+  res <- rep(0.5, length(q))
+  nu <- rep(nu, length.out = length(q))
+  # Only the positive 
+  signq <- sign(q)
+  q <- abs(q)
+  # Code avoid calculate PDF(0) because the function has a singularity at that point.
+  if(lower.tail) {
+    for(i in which(!!signq)) {
+      if(signq[i]==1)
+        res[i] <- 1 - integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
+      else
+        res[i] <- integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
+    }
+  } else {
+    for(i in which(!!signq)) {
+      if(signq[i]==1)
+        res[i] <- integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
+      else
+        res[i] <- 1 - integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
+    }
+  }
+  res
+}
+#
 MCA <- function(y, x, emobj) {
   if(!inherits(emobj,"eigenmap")) stop("Parameter 'emobj' must be a 'eigenmap' object!")
   if(length(y) != length(x)) stop("Number of observations in y and x do not match!")
@@ -30,90 +67,92 @@ MCA <- function(y, x, emobj) {
     class = "mca"))
 }
 #
-test.mca <- function(mcaobj, alpha = 0.05, max.step = Inf) {
-  if(!is.finite(max.step[1])) max.step <- ncol(mcaobj$emobj$U)
-  us <- matrix(NA, nrow(mcaobj$emobj$U), 0)
-  uspyx <- matrix(NA, 0, 2)
-  yxc <- cbind(yc=mcaobj$data[,1]-mean(mcaobj$data[,1]), xc=mcaobj$data[,2]-mean(mcaobj$data[,2]))
-  ord <- order(abs(mcaobj$Upyxcb[,3]), decreasing = TRUE)
-  ttable <- matrix(NA, 0, 4)
+test.mca <- function (mcaobj, alpha = 0.05, max.step = Inf) {
+  if (class(mcaobj) != "mca")
+    stop("Parameter 'mcaobj' must be of class 'mca'.")
+  if (!is.finite(max.step[1L]))
+    max.step <- ncol(mcaobj$emobj$U)
+  us <- matrix(NA, nrow(mcaobj$emobj$U), 0L)
+  uspyx <- matrix(NA, 0L, 2L)
+  yxc <- cbind(yc = mcaobj$data[,1L] - mean(mcaobj$data[,1L]), 
+               xc = mcaobj$data[,2L] - mean(mcaobj$data[,2L]))
+  ord <- order(abs(mcaobj$Upyxcb[,3L]), decreasing = TRUE)
+  ttable <- matrix(NA, 0L, 4L)
   colnames(ttable) <- c("tau", "ddf", "Testwise p", "Familywise p")
-  step <- 1
-  while(step != 0) {
+  step <- 1L
+  while (step != 0L) {
     us <- cbind(us, mcaobj$emobj$U[,ord[step]])
-    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1:2])
-    ddfr <- nrow(mcaobj$data) - step - 1
+    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1L:2])
+    ddfr <- nrow(mcaobj$data) - step - 1L
     ryx <- yxc - (us %*% uspyx)
-    t2 <- ddfr * (uspyx[step,1] * uspyx[step,2]) / sqrt((t(ryx[,1]) %*% ryx[,1]) * (t(ryx[,2]) %*% ryx[,2]))
-    t2s <- ddfr * min(uspyx[step,1]^2 / (t(ryx[,1]) %*% ryx[,1]), uspyx[step,2]^2 / (t(ryx[,2]) %*% ryx[,2]))
-    ttable <- rbind(ttable, c(t2, ddfr, NA, NA))
-    ttable[step,3] <- pf(t2s,1,ddfr,lower.tail=FALSE)^2
-    ttable[step,4] <- 1 - (1 - ttable[step,3])^(ncol(mcaobj$emobj$U) - step + 1)
-    if (ttable[step,4] > alpha || step >= max.step) {
-      rownames(ttable) <- colnames(mcaobj$emobj$U)[ord[1:step]]
-      step <- 0
-    }
-    else step <- step + 1
+    tau <- ddfr * (uspyx[step,1L] * uspyx[step,2L]) / sqrt(sum(ryx[,1L]^2) * sum(ryx[,2L]^2))
+    ttable <- rbind(ttable, c(tau, ddfr, NA, NA))
+    ttable[step,3L] <- 2 * ptau(abs(tau), ddfr, lower.tail = FALSE)
+    ttable[step,4L] <- 1 - (1 - ttable[step,3L])^(ncol(mcaobj$emobj$U) - step + 1L)
+    if (ttable[step,4L] > alpha || step >= max.step) {
+      rownames(ttable) <- colnames(mcaobj$emobj$U)[ord[1L:step]]
+      step <- 0L
+    } else step <- step + 1L
   }
-  signif <- ord[which(ttable[,4] <= alpha)]
-  return(structure(list(
-    data = mcaobj$data,
-    emobj = mcaobj$emobj,
-    Upyxcb = mcaobj$Upyxcb,
-    test = list(permute = FALSE,
-                significant = signif,
-                test.table = ttable,
-                details = NULL)),
-    class = "mca"))
+  signif <- ord[which(ttable[,4L] <= alpha)]
+  return(structure(list(data = mcaobj$data,
+                        emobj = mcaobj$emobj,
+                        Upyxcb = mcaobj$Upyxcb,
+                        test = list(permute = FALSE,
+                                    significant = signif,
+                                    test.table = ttable,
+                                    details = NULL)),
+                   class = "mca"))
 }
 #
-permute.mca <- function(mcaobj, permute = NA, alpha = 0.05, max.step = Inf) {
-  permut <- function(p,ryx,us,t2,details,permute,step,ddfr){
-     .Call("permut",p,ryx,us,
-          t2,details,permute,
-          step,ddfr, PACKAGE="codep")
-  }
-  if(!is.finite(max.step[1])) max.step <- ncol(mcaobj$emobj$U)
-  if(is.na(permute[1])) permute <- minpermute(alpha,ncol(mcaobj$emobj$U),10,3)
-  us <- matrix(NA, nrow(mcaobj$emobj$U), 0)
-  uspyx <- matrix(NA, 0, 2)
-  yxc <- cbind(yc=mcaobj$data[,1]-mean(mcaobj$data[,1]), xc=mcaobj$data[,2]-mean(mcaobj$data[,2]))
-  ord <- order(abs(mcaobj$Upyxcb[,3]), decreasing = TRUE)
-  ttable <- matrix(NA, 0, 4)
+permute.mca <- function (mcaobj, permute = NA, alpha = 0.05, max.step = Inf) {
+  if (!is.finite(max.step[1L]))
+    max.step <- ncol(mcaobj$emobj$U)
+  if (is.na(permute[1L]))
+    permute <- minpermute(alpha, ncol(mcaobj$emobj$U), 10L, 3L)
+  us <- matrix(NA, nrow(mcaobj$emobj$U), 0L)
+  uspyx <- matrix(NA, 0L, 2L)
+  yxc <- cbind(yc = mcaobj$data[,1L] - mean(mcaobj$data[,1L]), 
+               xc = mcaobj$data[,2L] - mean(mcaobj$data[,2L]))
+  ord <- order(abs(mcaobj$Upyxcb[, 3]), decreasing = TRUE)
+  ttable <- matrix(NA, 0L, 4L)
   colnames(ttable) <- c("tau", "ddf", "Testwise p", "Familywise p")
-  details <- matrix(NA, 0, 3)
-  colnames(details) <- c("tau* <= -|tau|", "-|tau| < tau* < |tau|", "tau* >= |tau|")
-  step <- 1
-  while(step != 0) {
+  details <- matrix(NA, 0L, 3L)
+  colnames(details) <- c("tau* <= -|tau|", "-|tau| < tau* < |tau|", 
+                         "tau* >= |tau|")
+  step <- 1L
+  while (step != 0L) {
     us <- cbind(us, mcaobj$emobj$U[,ord[step]])
-    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1:2])
-    ddfr <- nrow(mcaobj$data) - step - 1
+    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1L:2])
+    ddfr <- nrow(mcaobj$data) - step - 1L
     ryx <- yxc - (us %*% uspyx)
-    t2 <- ddfr * (uspyx[step,1] * uspyx[step,2]) / sqrt((t(ryx[,1]) %*% ryx[,1]) * (t(ryx[,2]) %*% ryx[,2]))
-    ttable <- rbind(ttable, c(t2, ddfr, NA, NA))
-    details <- rbind(details,c(0,0,1))
-    p <- matrix(NA, nrow(mcaobj$data), 4)
-    details <- permut(p,ryx,us,t2,details,permute,step,ddfr)
-    colnames(details) <- c("tau* <= -|tau|", "-|tau| < tau* < |tau|", "tau* >= |tau|")
-    ttable[step,3] <- (details[step,1] + details[step,3]) / sum(details[step,])
-    ttable[step,4] <- 1 - (1 - ttable[step,3])^(ncol(mcaobj$emobj$U) - step + 1)
-    if (ttable[step,4] > alpha || step >= max.step) {
-      rownames(ttable) <- colnames(mcaobj$emobj$U)[ord[1:step]]
-      rownames(details) <- colnames(mcaobj$emobj$U)[ord[1:step]]
-      step <- 0
-    }
-    else step <- step + 1
+    tau0 <- (uspyx[step,1L] * uspyx[step,2L]) / sqrt(sum(ryx[,1L]^2) * sum(ryx[,2L]^2))
+    ttable <- rbind(ttable, c(ddfr * tau0, ddfr, NA, NA))
+    details <- rbind(details, c(0L, 0L, 1L))
+    details[step,] <- .C("mcapermute",
+                         as.double(tau0),
+                         as.double(ryx[,1L]),
+                         as.double(ryx[,2L]),
+                         as.double(us[,step]),
+                         as.integer(nrow(us)),
+                         details = as.integer(details[step,]),
+                         as.integer(permute))$details
+    ttable[step,3L] <- (details[step,1L] + details[step,3L])/sum(details[step,])
+    ttable[step,4L] <- 1 - (1 - ttable[step, 3])^(ncol(mcaobj$emobj$U) - step + 1L)
+    if (ttable[step,4L] > alpha || step >= max.step) {
+      rownames(ttable) <- rownames(details) <- colnames(mcaobj$emobj$U)[ord[1L:step]]
+      step <- 0L
+    } else step <- step + 1L
   }
-  signif <- ord[which(ttable[,4] <= alpha)]
-  return(structure(list(
-    data = mcaobj$data,
-    emobj = mcaobj$emobj,
-    Upyxcb = mcaobj$Upyxcb,
-    test = list(permute = permute,
-                significant = signif,
-                test.table = ttable,
-                details = details)),
-    class = "mca"))
+  signif <- ord[which(ttable[, 4] <= alpha)]
+  return(structure(list(data = mcaobj$data,
+                        emobj = mcaobj$emobj,
+                        Upyxcb = mcaobj$Upyxcb,
+                        test = list(permute = permute,
+                                    significant = signif,
+                                    test.table = ttable,
+                                    details = details)),
+                   class = "mca"))
 }
 #
 print.mca <- function(x, ...) {

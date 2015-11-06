@@ -55,7 +55,7 @@
     the coregression coefficients \eqn{\mathbf{b}}{b}. }
   \item{test}{ Results of statistical testing as performed by
     \code{\link{test.mca}} or \code{\link{permute.mca}}. \code{NULL} if
-    no testing was performed, such as when only \code{\link{mca}} had
+    no testing was performed, such as when only \code{\link{MCA}} had
     been called. The results of statistical testing is a list containing
     the following members: }
   \item{permute}{ The number of randomized permutations used by
