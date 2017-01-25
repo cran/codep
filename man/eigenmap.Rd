@@ -187,31 +187,30 @@ all(round(scr[-smpl,] - map$U, 10) == 0) # Scores of sampling points are the eig
 scr[smpl,]
 #
 wh <- 5L   # You can try with other vectors.
-plot(map$U[,wh]~Salmon[-smpl,"Position"])
+plot(map$U[,wh]~Salmon[-smpl,"Position"], ylab = expression(U[5]),
+     xlab = "Position along transect")
 points(y=scr[smpl,wh],x=Salmon[smpl,"Position"],pch=21,bg="black")
 #
 map <- eigenmap(x=Salmon[-smpl,"Position"],weighting=Wf.binary,boundaries=c(0,20))
 scr <- eigenmap.score(object=map,target=as.matrix(dist(Salmon[,"Position"]))[smpl,-smpl])
 #
 wh <- 1L   # You can try with other vectors.
-plot(map$U[,wh]~Salmon[-smpl,"Position"])
+plot(map$U[,wh]~Salmon[-smpl,"Position"], ylab = expression(U[1]),
+     xlab = "Position along transect (m)")
 points(y=scr[,wh],x=Salmon[smpl,"Position"],pch=21,bg="black")
 #
 map <- eigenmap(x=Salmon[-smpl,"Position"],weighting=Wf.PCNM,boundaries=c(0,100))
 scr <- eigenmap.score(object=map,target=as.matrix(dist(Salmon[,"Position"]))[smpl,-smpl])
 #
 wh <- 1L   # You can try with other vectors.
-plot(map$U[,wh]~Salmon[-smpl,"Position"])
+plot(map$U[,wh]~Salmon[-smpl,"Position"], ylab = expression(U[1]),
+     xlab = "Position along transect (m)")
 points(y=scr[,wh],x=Salmon[smpl,"Position"],pch=21,bg="black")
 #
 ### Example 3: A unevenly sampled surface.
 #
-## Require package vegan
-\dontrun{
-library(vegan)
-data(mite.xy)
-map <- eigenmap(x=as.matrix(mite.xy),weighting=Wf.sqrd)
+data(Mite)
+map <- eigenmap(x=as.matrix(mite.geo),weighting=Wf.sqrd)
 map # plot(map)
-}
 #
 }

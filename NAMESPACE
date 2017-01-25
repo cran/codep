@@ -3,20 +3,21 @@
 #
 # Imports
 importFrom("grDevices", "grey")
-importFrom("graphics", "barplot", "layout", "locator", "plot", "points", "title")
-importFrom("stats", "as.dist", "dist", "dt", "hclust", "integrate")
+importFrom("graphics", "axis", "box", "hist", "image", "layout", "locator", "par", "plot", "points", "rect", "title")
+importFrom("stats", "as.dist", "df", "dist", "dt", "hclust", "integrate")
 #
 # Exports with patterns
 exportPattern("^[^\\.]")
-
+#
 # Register S3 methods
-S3method(print, mca)
 S3method(print, eigenmap)
-S3method(plot, mca)
 S3method(plot, eigenmap)
+S3method(print, mca)
+S3method(plot, mca)
 S3method(summary, mca)
 S3method(fitted, mca)
-S3method(predict, mca)
 S3method(residuals, mca)
+S3method(predict, mca)
 #
+# Load dynamic library
 useDynLib("codep")

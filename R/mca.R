@@ -1,249 +1,369 @@
 #
-cthreshold <- function(alpha,nbtest) return(1-(1-alpha)^(nbtest^-1))
-#
-minpermute <- function(alpha,nbtest,margin=1,ru=3) {
-  return(round(floor(margin*(1-(1-alpha)^(nbtest^-1))^-1),-ru)+(10^ru)-1)
-}
-#
-dtau <- function(x, nu, tol = .Machine$double.eps ^ 0.5) {
-  res <- numeric(length(x))
-  nu <- rep(nu, length.out = length(x))
-  # Integrand function to be integrated over positive real numbers.
-  f <- function(z, x, nu)
-    dt(z, nu) * dt(x / z, nu) / z   # abs(z) always == z for real positive.
-  # The integrand being symmetric, only the positive is integrated and the result multiplied by two.
-  for(i in 1L:length(x))
-    res[i] <- 2 * integrate(f, lower = 0, upper = Inf, x = x[i], nu = nu[i], rel.tol = tol)$value
-  res
-}
-#
-ptau <- function(q, nu, lower.tail = TRUE, tol = .Machine$double.eps^0.5) {
-  res <- rep(0.5, length(q))
-  nu <- rep(nu, length.out = length(q))
-  # Only the positive 
-  signq <- sign(q)
-  q <- abs(q)
-  # Code avoid calculate PDF(0) because the function has a singularity at that point.
-  if(lower.tail) {
-    for(i in which(!!signq)) {
-      if(signq[i]==1)
-        res[i] <- 1 - integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
-      else
-        res[i] <- integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
-    }
-  } else {
-    for(i in which(!!signq)) {
-      if(signq[i]==1)
-        res[i] <- integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
-      else
-        res[i] <- 1 - integrate(dtau, lower = q[i], upper = Inf, nu = nu[i], tol = tol, rel.tol = tol)$value
+MCA <- function (Y, X, emobj) {
+  if (!inherits(emobj, "eigenmap"))
+    stop("Parameter 'emobj' must be a 'eigenmap' object!")
+  if (!is.matrix(Y))
+    Y <- matrix(Y, length(Y), 1L, dimnames = list(names(Y), "Y"))
+  if (!is.matrix(X))
+    X <- matrix(X, length(X), 1L, dimnames = list(names(X), "X"))
+  if (nrow(Y) != nrow(X))
+    stop("Number of observations in Y and X do not match!")
+  if (nrow(emobj$U) != nrow(Y))
+    stop("Number of observations in Y does not match the number of lines in U.")
+  Dnms <- list(Y = colnames(Y), X = colnames(X))
+  mssd <- list(mY = NA, mX = NA, ssdY = NA, ssdX = NA)
+  mssd[[1L]] <- colMeans(Y)
+  mssd[[2L]] <- colMeans(X)
+  YXc <- list(Yc = Y - rep(mssd$mY, each = nrow(Y)),
+              Xc = X - rep(mssd$mX, each = nrow(X)))
+  mssd[[3L]] <- colSums(YXc$Yc^2)
+  mssd[[4L]] <- colSums(YXc$Xc^2)
+  UpYXcb <- list(UpY = matrix(NA, ncol(emobj$U), ncol(Y), dimnames = list(colnames(emobj$U), Dnms$Y)),
+                 UpX = matrix(NA, ncol(emobj$U), ncol(X), dimnames = list(colnames(emobj$U), Dnms$X)),
+                 C = array(NA, dim = c(ncol(emobj$U), ncol(Y), ncol(X)), dimnames = list(colnames(emobj$U), Dnms$Y, Dnms$X)),
+                 B = array(NA, dim = c(ncol(emobj$U), ncol(Y), ncol(X)), dimnames = list(colnames(emobj$U), Dnms$Y, Dnms$X)),
+                 CM = matrix(NA, ncol(emobj$U), ncol(X), dimnames = list(colnames(emobj$U), Dnms$X)))
+  UpYXcb$UpY[] <- t(emobj$U) %*% YXc$Yc
+  UpYXcb$UpX[] <- t(emobj$U) %*% YXc$Xc
+  for (i in 1L:ncol(X)) {
+    UpYXcb$C[,,i] <- UpYXcb$UpY/sqrt(rep(mssd[[3L]], each = ncol(emobj$U))) * UpYXcb$UpX[,i]/sqrt(mssd[[4L]][i])
+    UpYXcb$B[,,i] <- UpYXcb$UpY/UpYXcb$UpX[,i]
+    for (j in 1L:ncol(emobj$U)) {
+      UpYXcb$CM[j,i] <- sqrt(sum((emobj$U[,j,drop=FALSE] %*% UpYXcb$UpY[j,,drop = FALSE])^2) / sum(YXc$Yc^2)) *
+        abs(UpYXcb$UpX[j,i] / sqrt(mssd[[4L]][i]))
     }
   }
-  res
+  return(structure(list(data = list(Y = Y, X = X), emobj = emobj, 
+                        UpYXcb = UpYXcb, test = NULL), class = "mca"))
 }
 #
-MCA <- function(y, x, emobj) {
-  if(!inherits(emobj,"eigenmap")) stop("Parameter 'emobj' must be a 'eigenmap' object!")
-  if(length(y) != length(x)) stop("Number of observations in y and x do not match!")
-  if(nrow(emobj$U) != length(y)) stop("Number of observations in y does not match the number of lines in U.")
+test.mca <- function(object, alpha = 0.05, max.step, response.tests = TRUE) {
+  if (!inherits(object, "mca"))
+    stop("Parameter 'object' must be of class 'mca'.")
+  if (missing(max.step))
+    max.step <- ncol(object$emobj$U)
+  else
+    max.step <- max.step[1L]
   #
-  mssd <- c(my=NA,mx=NA,ssdy=NA,ssdx=NA)
-  mssd[1:2] <- c(mean(y),mean(x))
-  yxc <- cbind(yc=y-mssd[1], xc=x-mssd[2])
-  mssd[3:4] <- c(t(yxc[,1]) %*% yxc[,1], t(yxc[,2]) %*% yxc[,2])  
-  Upyxcb <- matrix(NA, dim(emobj$U)[2], 4)  
-  colnames(Upyxcb) <- c("Upy", "Upx", "C", "B")
-  rownames(Upyxcb) <- colnames(emobj$U)
-  Upyxcb[,1:2] <- t(emobj$U) %*% yxc
-  Upyxcb[,3] <- (Upyxcb[,1] * Upyxcb[,2]) / sqrt(mssd[3] * mssd[4])
-  Upyxcb[,4] <- (Upyxcb[,1] / Upyxcb[,2])
-  #
-  ## Output block.
-  return(structure(list(
-    data = cbind(y=y,x=x),
-    emobj = emobj,
-    Upyxcb = Upyxcb,
-    test = NULL),
-    class = "mca"))
-}
-#
-test.mca <- function (mcaobj, alpha = 0.05, max.step = Inf) {
-  if (class(mcaobj) != "mca")
-    stop("Parameter 'mcaobj' must be of class 'mca'.")
-  if (!is.finite(max.step[1L]))
-    max.step <- ncol(mcaobj$emobj$U)
-  us <- matrix(NA, nrow(mcaobj$emobj$U), 0L)
-  uspyx <- matrix(NA, 0L, 2L)
-  yxc <- cbind(yc = mcaobj$data[,1L] - mean(mcaobj$data[,1L]), 
-               xc = mcaobj$data[,2L] - mean(mcaobj$data[,2L]))
-  ord <- order(abs(mcaobj$Upyxcb[,3L]), decreasing = TRUE)
-  ttable <- matrix(NA, 0L, 4L)
-  colnames(ttable) <- c("tau", "ddf", "Testwise p", "Familywise p")
+  us <- matrix(NA, nrow(object$emobj$U), 1L)
+  uspY <- matrix(NA, 1L, ncol(object$data$Y), dimnames = list(NULL, colnames(object$data$Y)))
+  uspX <- matrix(NA, 1L, ncol(object$data$X), dimnames = list(NULL, colnames(object$data$X)))
+  Yc <- object$data$Y - rep(colMeans(object$data$Y), each = nrow(object$data$Y))
+  Xc <- object$data$X - rep(colMeans(object$data$X), each = nrow(object$data$X))
+  ord <- order(apply(object$UpYXcb$CM, 1L, max), decreasing = TRUE)   # Order of eigenfunctions.
+  bstX <- apply(object$UpYXcb$CM, 1L, which.max)                      # Which descriptor to test.
+  ttable <- matrix(NA, 0L, 6L, dimnames = list(NULL, c("Variable","phi", "df1", "df2", "Testwise p", "Familywise p")))
+  if (response.tests) 
+    respts <- array(numeric(0), dim = c(ncol(object$data$Y), 4L, 0L),
+                    dimnames = list(colnames(object$data$Y), c("tau", "df", "Testwise p", "Familywise p"), NULL))
   step <- 1L
   while (step != 0L) {
-    us <- cbind(us, mcaobj$emobj$U[,ord[step]])
-    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1L:2])
-    ddfr <- nrow(mcaobj$data) - step - 1L
-    ryx <- yxc - (us %*% uspyx)
-    tau <- ddfr * (uspyx[step,1L] * uspyx[step,2L]) / sqrt(sum(ryx[,1L]^2) * sum(ryx[,2L]^2))
-    ttable <- rbind(ttable, c(tau, ddfr, NA, NA))
-    ttable[step,3L] <- 2 * ptau(abs(tau), ddfr, lower.tail = FALSE)
-    ttable[step,4L] <- 1 - (1 - ttable[step,3L])^(ncol(mcaobj$emobj$U) - step + 1L)
-    if (ttable[step,4L] > alpha || step >= max.step) {
-      rownames(ttable) <- colnames(mcaobj$emobj$U)[ord[1L:step]]
-      step <- 0L
-    } else step <- step + 1L
+    us[] <- object$emobj$U[, ord[step]]
+    uspY[] <- object$UpYXcb$UpY[ord[step],]
+    uspX[] <- object$UpYXcb$UpX[ord[step],]
+    df2 <- nrow(object$data$Y) - step - 1L
+    Yhat <- us %*% uspY
+    Xhat <- us %*% uspX
+    Yc <- Yc - Yhat
+    Xc <- Xc - Xhat
+    phi_global <- df2^2 * sum(Yhat^2) * sum(Xhat[,bstX[ord[step]]]^2)/(sum(Yc^2) * sum(Xc[,bstX[ord[step]]]^2))
+    ttable <- rbind(ttable, c(bstX[ord[step]], phi_global, ncol(object$data$Y), df2, NA, NA))
+    ttable[step,5L] <- pphi(phi_global, ncol(object$data$Y), df2, lower.tail = FALSE)
+    ttable[step,6L] <- 1 - (1 - ttable[step,5L])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+    if (response.tests) {
+      tau_resp <- df2 * uspY[1L,] * uspX[bstX[ord[step]]] * (colSums(Yc^2) * sum(Xc[,bstX[ord[step]]]^2))^-0.5
+      respts <- array(as.numeric(respts), dim = c(dim(respts)[1L], dim(respts)[2L], dim(respts)[3L] + 1L),
+                      dimnames = c(dimnames(respts)[1L:2], list(NULL)))
+      respts[,1L,step] <- tau_resp
+      respts[,2L,step] <- df2
+      respts[,3L,step] <- 2 * ptau(abs(tau_resp), df2, lower.tail = FALSE)
+      respts[,4L,step] <- 1 - (1 - respts[,3L,step])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+    }
+    if (ttable[step,6L] > alpha || step >= max.step) {
+      rownames(ttable) <- colnames(object$emobj$U)[ord[1L:step]]
+      if (response.tests)
+        dimnames(respts)[[3L]] <- rownames(ttable)
+      step <- 0
+    }
+    else step <- step + 1
   }
-  signif <- ord[which(ttable[,4L] <= alpha)]
-  return(structure(list(data = mcaobj$data,
-                        emobj = mcaobj$emobj,
-                        Upyxcb = mcaobj$Upyxcb,
-                        test = list(permute = FALSE,
-                                    significant = signif,
-                                    test.table = ttable,
-                                    details = NULL)),
+  signif <- list(U = ord[which(ttable[, 6L] <= alpha)])
+  signif$X <- bstX[signif$U]
+  return(structure(list(data = object$data, emobj = object$emobj, 
+                        UpYXcb = object$UpYXcb, test = list(permute = FALSE, 
+                                                            significant = signif, global = ttable, response = if (response.tests) respts else NULL, 
+                                                            permutations = NULL)),
                    class = "mca"))
 }
 #
-permute.mca <- function (mcaobj, permute = NA, alpha = 0.05, max.step = Inf) {
-  if (!is.finite(max.step[1L]))
-    max.step <- ncol(mcaobj$emobj$U)
-  if (is.na(permute[1L]))
-    permute <- minpermute(alpha, ncol(mcaobj$emobj$U), 10L, 3L)
-  us <- matrix(NA, nrow(mcaobj$emobj$U), 0L)
-  uspyx <- matrix(NA, 0L, 2L)
-  yxc <- cbind(yc = mcaobj$data[,1L] - mean(mcaobj$data[,1L]), 
-               xc = mcaobj$data[,2L] - mean(mcaobj$data[,2L]))
-  ord <- order(abs(mcaobj$Upyxcb[, 3]), decreasing = TRUE)
-  ttable <- matrix(NA, 0L, 4L)
-  colnames(ttable) <- c("tau", "ddf", "Testwise p", "Familywise p")
-  details <- matrix(NA, 0L, 3L)
-  colnames(details) <- c("tau* <= -|tau|", "-|tau| < tau* < |tau|", 
-                         "tau* >= |tau|")
+permute.mca <- function(object, permute, alpha = 0.05, max.step, response.tests = TRUE) {
+  if (!inherits(object, "mca"))
+    stop("Parameter 'object' must be of class 'mca'.")
+  if (missing(max.step))
+    max.step <- ncol(object$emobj$U)
+  else
+    max.step <- max.step[1L]
+  if (missing(permute))
+    permute <- codep::minpermute(alpha, ncol(object$emobj$U) * ncol(object$data$X), 10L, 3L)
+  else
+    permute <- permute[1L]
+  us <- matrix(NA, nrow(object$emobj$U), 1L)
+  uspY <- matrix(NA, 1L, ncol(object$data$Y), dimnames = list(NULL, colnames(object$data$Y)))
+  uspX <- matrix(NA, 1L, ncol(object$data$X), dimnames = list(NULL, colnames(object$data$X)))
+  Yc <- object$data$Y - rep(colMeans(object$data$Y), each = nrow(object$data$Y))
+  Xc <- object$data$X - rep(colMeans(object$data$X), each = nrow(object$data$X))
+  ord <- order(apply(object$UpYXcb$CM, 1L, max), decreasing = TRUE)   # Order of eigenfunctions.
+  bstX <- apply(object$UpYXcb$CM, 1L, which.max)                      # Which descriptor to test.
+  ttable <- matrix(NA, 0L, 6L, dimnames = list(NULL, c("Variable","phi", "df1", "df2", "Testwise p", "Familywise p")))
+  perm_global <- matrix(NA, 0L, 2L, dimnames = list(NULL, c("phi*<phi", "phi*>=phi")))
+  if (response.tests) {
+    respts <- array(numeric(0), dim = c(ncol(object$data$Y), 4L, 0L),
+                    dimnames = list(colnames(object$data$Y), c("tau", "df", "Testwise p", "Familywise p"), NULL))
+    perm_response <- array(numeric(0), dim = c(ncol(object$data$Y), 3L, 0L),
+                           dimnames = list(colnames(object$data$Y), c("tau*<=-|tau|", "-|tau|<tau*<|tau|", "tau*>=|tau|"), NULL))
+  }
   step <- 1L
   while (step != 0L) {
-    us <- cbind(us, mcaobj$emobj$U[,ord[step]])
-    uspyx <- rbind(uspyx, mcaobj$Upyxcb[ord[step],1L:2])
-    ddfr <- nrow(mcaobj$data) - step - 1L
-    ryx <- yxc - (us %*% uspyx)
-    tau0 <- (uspyx[step,1L] * uspyx[step,2L]) / sqrt(sum(ryx[,1L]^2) * sum(ryx[,2L]^2))
-    ttable <- rbind(ttable, c(ddfr * tau0, ddfr, NA, NA))
-    details <- rbind(details, c(0L, 0L, 1L))
-    details[step,] <- .C("mcapermute",
-                         as.double(tau0),
-                         as.double(ryx[,1L]),
-                         as.double(ryx[,2L]),
-                         as.double(us[,step]),
-                         as.integer(nrow(us)),
-                         details = as.integer(details[step,]),
-                         as.integer(permute))$details
-    ttable[step,3L] <- (details[step,1L] + details[step,3L])/sum(details[step,])
-    ttable[step,4L] <- 1 - (1 - ttable[step, 3])^(ncol(mcaobj$emobj$U) - step + 1L)
-    if (ttable[step,4L] > alpha || step >= max.step) {
-      rownames(ttable) <- rownames(details) <- colnames(mcaobj$emobj$U)[ord[1L:step]]
-      step <- 0L
-    } else step <- step + 1L
+    us[] <- object$emobj$U[, ord[step]]
+    uspY[] <- object$UpYXcb$UpY[ord[step],]
+    uspX[] <- object$UpYXcb$UpX[ord[step],]
+    df2 <- nrow(object$data$Y) - step - 1L
+    Yhat <- us %*% uspY
+    Xhat <- us %*% uspX
+    Yc <- Yc - Yhat
+    Xc <- Xc - Xhat
+    phi_global0 <- sum(Yhat^2) * sum(Xhat[,bstX[ord[step]]]^2)/(sum(Yc^2) * sum(Xc[,bstX[ord[step]]]^2))
+    ttable <- rbind(ttable, c(bstX[ord[step]], df2^2 * phi_global0, ncol(object$data$Y), df2, NA, NA))
+    perm_global <- rbind(perm_global, c(0L, 1L))
+    if (response.tests) {
+      tau_resp0 <- uspY[1L,] * uspX[bstX[ord[step]]] * (colSums(Yc^2) * sum(Xc[, bstX[ord[step]]]^2))^-0.5
+      respts <- array(as.numeric(respts), dim = c(dim(respts)[1L], dim(respts)[2L], dim(respts)[3L] + 1L),
+                      dimnames = c(dimnames(respts)[1L:2], list(NULL)))
+      respts[,1L,step] <- df2 * tau_resp0
+      respts[,2L,step] <- df2
+      perm_response <- array(as.numeric(perm_response),
+                             dim = c(dim(perm_response)[1L], dim(perm_response)[2L], dim(perm_response)[3L] + 1L),
+                             dimnames = c(dimnames(perm_response)[1L:2], list(NULL)))
+      perm_response[,1L:2,step] <- 0
+      perm_response[,3L,step] <- 1
+      tmp <- .C("mcapermute",
+                as.double(phi_global0),
+                as.double(abs(tau_resp0)),
+                as.double(Yc),
+                as.integer(ncol(Yc)),
+                as.double(Xc[,bstX[ord[step]]]),
+                as.double(us),
+                as.integer(nrow(us)),
+                perm_global = as.integer(perm_global[step,]),
+                perm_response = as.integer(perm_response[,,step]),
+                as.integer(permute),
+                as.integer(TRUE))
+      perm_global[step,] <- tmp$perm_global
+      perm_response[,,step] <- tmp$perm_response
+    } else {
+      perm_global[step,] <- .C("mcapermute",
+                               as.double(phi_global0),
+                               as.double(),
+                               as.double(Yc),
+                               as.integer(ncol(Yc)),
+                               as.double(Xc[,bstX[ord[step]]]),
+                               as.double(us),
+                               as.integer(nrow(us)),
+                               perm_global = as.integer(perm_global[step,]),
+                               integer(),
+                               as.integer(permute),
+                               as.integer(FALSE))$perm_global
+    }
+    ttable[step,5L] <- perm_global[step,2L] / (permute + 1)
+    ttable[step,6L] <- 1 - (1 - ttable[step, 5L])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+    if (response.tests) {
+      respts[,3L,step] <- (perm_response[,1L,step] + perm_response[,3L,step]) / (permute + 1)
+      respts[,4L,step] <- 1 - (1 - respts[,3L,step])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+    }
+    if (ttable[step, 6L] > alpha || step >= max.step) {
+      rownames(ttable) <- colnames(object$emobj$U)[ord[1L:step]]
+      if (response.tests) {
+        dimnames(respts)[[3L]] <- rownames(ttable)
+        dimnames(perm_response)[[3L]] <- rownames(ttable)
+      }
+      step <- 0
+    }
+    else step <- step + 1
   }
-  signif <- ord[which(ttable[, 4] <= alpha)]
-  return(structure(list(data = mcaobj$data,
-                        emobj = mcaobj$emobj,
-                        Upyxcb = mcaobj$Upyxcb,
-                        test = list(permute = permute,
-                                    significant = signif,
-                                    test.table = ttable,
-                                    details = details)),
+  signif <- list(U = ord[which(ttable[,6L] <= alpha)])
+  signif$X <- bstX[signif$U]
+  return(structure(list(data = object$data, emobj = object$emobj, 
+                        UpYXcb = object$UpYXcb, test = list(permute = permute, 
+                                                            significant = signif, global = ttable, response = if (response.tests) respts else NULL, 
+                                                            permutations = list(global = perm_global, response = if (response.tests) perm_response else NULL))),
                    class = "mca"))
 }
 #
-print.mca <- function(x, ...) {
-  cat("\nMulti-scale Codependence Analysis\n---------------------------------\n\n")
-  cat("Coefficients:\n")
-  print(cbind(round(x$Upyxcb[,3:4],5), Lambda=round(x$emobj$lambda,5)))
-  cat("\n")
+print.mca <- function (x, ...) {
+  cat("\nMultiple Multi-scale Codependence Analysis\n---------------------------\n\n")
+  cat(ncol(x$data$X), " explanatory variable", if (ncol(x$data$X)>1L) "s","\n\n", sep = "")
+  print(signif(cbind(x$emobj$lambda, x$UpYXcb$CM),4))
+  if (!is.null(x$test)) {
+    cat("--------------------\nGlobal testing information is available\n")
+    if (!is.null(x$test$response)) 
+      cat("Hypothesis test",if (ncol(x$data$X)>1L) "s"," also available for the response",
+          if (ncol(x$data$X)>1L) "s", "\n", sep = "")
+    else cat("Individual test", if (ncol(x$data$X)>1L) "s"," unavailable\n", sep = "")
+  } else cat("\n")
+  return(invisible(NULL))
+}
+#
+plot.mca <- function (x, col, col.signif = 2, main = "", ...) {
+  if(missing(col))
+    col <- grey(seq(1, 0, length.out = 256))
+  mar <- par()$mar
+  z <- log10(x$UpYXcb$CM + 1e-04)
+  par(mar = c(mar[1L], mar[2L], mar[3L], 0.75), fig = c(0, 0.875 - 0.025 * (mar[4L] - 2.1), 0, 1))
+  image(y = 1L:ncol(x$data$X), x = 1L:ncol(x$emobj$U), z = z,
+        zlim = c(-4, 1e-04), col = col, axes = FALSE, xlab = "", ylab = "",
+        main = main, ...)
+  box(...)
+  axis(1, at = 1L:ncol(x$emobj$U), labels = colnames(x$emobj$U), ...)
+  axis(2, at = 1L:ncol(x$data$X), labels = colnames(x$data$X), ...)
+  if (!is.null(x$test$signif)) 
+    rect(xleft = x$test$signif$U - 0.5, xright = x$test$signif$U + 0.5,
+         ybottom = x$test$signif$X - 0.5, ytop = x$test$signif$X + 0.5,
+         border = col.signif, density = NULL, ...)
+  par(mar = c(mar[1L], 0.75, mar[3L], mar[4L]), fig = c(0.875 - 0.025 * (mar[4L] - 2.1), 1, 0, 1), new = TRUE)
+  image(z = matrix(seq(-4, 1e-04, length.out = 256), 1L, 256L), x = 0,
+        y = seq(-4, 1e-04, length.out = 256), col = col, axes = FALSE,
+        xlab = "", ylab = "", main = "", ...)
+  box(...)
+  axis(4, labels = 10^seq(-4, 0, 1), at = seq(-4, 0, 1), ...)
+  par(mar = mar, fig = c(0, 1, 0, 1))
   return(invisible(NULL))
 }
 #
 summary.mca <- function(object, ...) {
-  if(is.null(object$test)) {
+  cat("\nMultiple Multi-scale Codependence Analysis\n---------------------------\n\n")
+  cat(ncol(object$data$X), " explanatory variable",if (ncol(object$data$X)>1) "s","\n\n",sep="")
+  if (is.null(object$test)) {
     cat("\nNo testing informations available\n\n")
   } else {
     cat("\nTest table:\n")
-    print(object$test$test.table)
+    tmp <- data.frame(object$test$global[,1L:4,drop=FALSE], character(nrow(object$test$global)),
+                      stringsAsFactors = FALSE)
+    colnames(tmp)[5L] <- "Pr(>|phi|)"
+    tmp[,"Variable"] <- colnames(object$data$X)[tmp[,"Variable"]]
+    tmp[object$test$global[,6L] < 2.2e-16,"Pr(>|phi|)"] <-"<2.2e-16"
+    tmp[object$test$global[,6L] >= 2.2e-16,"Pr(>|phi|)"] <-
+      signif(object$test$global[object$test$global[,6L] >= 2.2e-16,6L], 2L)
+    print(tmp)
     cat("\n")
-  }
-  return(invisible(NULL))
-}
-#
-plot.mca <- function(x, ...) {
-  cc <- rep(grey(0.5),nrow(x$Upyxcb))
-  if(!is.null(x$test)) cc[x$test$significant] <- grey(0)
-  barplot(x$Upyxcb[,3],names.arg=rownames(x$Upyxcb),ylab="C",
-          ylim=c(-1,1)*max(abs(x$Upyxcb[,3])), las=2, space=0, col = cc)
-  return(invisible(NULL))
-}
-#
-fitted.mca <- function(object, which=NA, components=FALSE, ...) {
-  if(!is.null(object$test)) which <- object$test$significant
-  else if(is.na(which[1])) stop("No testing informations available: user must identify relevant coefficients.")
-  fit <- matrix(0,nrow(object$data),1)
-  if(components) {
-    cpns <- matrix(NA, nrow(object$data), length(which))
-    rownames(cpns) <- rownames(object$emobj$U)
-  }
-  if(length(which) != 0) {
-    by <- object$Upyxcb[which,4] * object$Upyxcb[which,2]
-    fit <- object$emobj$U[,which] %*% cbind(by) + mean(object$data[,1])
-    if (components) {
-      for (i in 1:length(which)) cpns[,i] <- object$emobj$U[,which[i]] * by[i]
-      colnames(cpns) <- paste("Component", which)
+    if (is.null(object$test$response))
+      cat("No individual response testing available\n")
+    else {
+      cat("Individual response tests:\n")
+      tmp <- matrix(NA, nrow(object$test$global), 6L, dimnames = list(rownames(object$test$global), NULL))
+      for (i in 1L:nrow(object$test$global))
+        tmp[i,] <- hist(x = object$test$response[, 4L, i], plot = FALSE, breaks = c(0, 1e-04, 0.001, 0.01, 0.05, 0.1, 1))$counts
+      tmp <- data.frame(tmp, Variable = colnames(object$data$X)[object$test$global[,1L]])
+      colnames(tmp) <- c("p<=0.0001", "0.0001>p>=0.001", "0.001>p>=0.01", "0.01>p>=0.05", "0.05>p>=0.1", "p>0.1", "Variable")
+      print(tmp)
+      cat("\n")
     }
   }
-  colnames(fit) <- "fitted" ; rownames(fit) <- rownames(object$emobj$U)
-  if(components) {
-    return(list(fitted=fit, components=cpns))
-  } else return(fit)
+  return(invisible(TRUE))
 }
 #
-residuals.mca <- function(object, which=NA, ...) {
-  if(!is.null(object$test)) which <- object$test$significant
-  else if(is.na(which[1])) stop("No testing informations available: user must identify relevant coefficients.")
-  res <- object$data[,1]
-  if(length(which) != 0) {
-    by <- object$Upyxcb[which,4] * object$Upyxcb[which,2]
-    res <- res - object$emobj$U[,which] %*% cbind(by) - mean(object$data[,1])
+fitted.mca <- function (object, selection, components = FALSE, ...) {
+  if(missing(selection)) {
+    if (!is.null(object$test))
+      selection <- object$test$significant
+    else
+      stop("No testing informations available: user must identify the relevant coefficients.")
+  } else {
+    if (is.null(selection$U))
+      stop("Parameter 'selection' must be a list with an element $U")
   }
-  colnames(res) <- "residuals" ; rownames(res) <- rownames(object$emobj$U)
+  if (components) {
+    cpns <- array(NA, dim = c(nrow(object$data$Y), ncol(object$data$Y), 
+                              length(selection$U)))
+    dimnames(cpns) <- list(rownames(object$data$Y), colnames(object$data$Y), 
+                           colnames(object$emobj$U)[selection$U])
+  }
+  if (length(selection$U)) {
+    by <- object$UpYXcb$UpY[selection$U,,drop=FALSE]
+    fit <- object$emobj$U[,selection$U,drop=FALSE] %*% by + rep(colMeans(object$data$Y), each = nrow(object$data$Y))
+    if (components) 
+      for (i in 1L:length(selection$U))
+        cpns[,,i] <- object$emobj$U[,selection$U[i],drop = FALSE] %*% by[i,,drop = FALSE]
+  }
+  if (components)
+    return(list(fitted = fit, components = cpns))
+  else
+    return(fit)
+}
+#
+residuals.mca <- function (object, selection, ...) {
+  if(missing(selection)) {
+    if (!is.null(object$test))
+      selection <- object$test$significant
+    else
+      stop("No testing informations available: user must identify the relevant coefficients.")
+  } else {
+    if (is.null(selection$U))
+      stop("Parameter 'selection' must be a list with an element $U")
+  }
+  res <- object$data$Y - rep(colMeans(object$data$Y), each = nrow(object$data$Y))
+  if (length(selection$U)) {
+    by <- object$UpYXcb$UpY[selection$U,]
+    res <- res - object$emobj$U[,selection$U,drop=FALSE] %*% by
+  }
   return(res)
 }
 #
-predict.mca <- function(object, which=NA, newdata=NA, components=FALSE, ...) {
-  if(is.na(newdata[1])) return (fitted.mca(object, which=which))
-  if(!is.null(object$test)) which <- object$test$significant
-  else if(is.na(which[1])) stop("No testing informations available: user must identify relevant coefficients.")
-  if(is.matrix(newdata)) {
-    newdata <- newdata[,1] ; warning("Only the first row of the matrix provided as 'newdata' is used.")
+predict.mca <- function (object, selection, newdata, components = FALSE, ...) {
+  if (missing(newdata))
+    return(fitted.mca(object, selection = selection))
+  if(missing(selection)) {
+    if (!is.null(object$test))
+      selection <- object$test$significant
+    else
+      stop("No testing informations available: user must identify relevant coefficients.")
+  } else {
+    if (is.null(selection$U)||is.null(selection$X))
+      stop("Parameter 'selection' must be a list with elements $U and $X")
   }
-  if(length(newdata) != nrow(object$emobj$U)) {
-    stop("Number of observations in 'newdata' does not match the number of lines in U.")
+  if(!is.null(newdata$X)) {
+    if ((NROW(newdata$X) != nrow(object$data$X)) || (NCOL(newdata$X) != ncol(object$data$X)))
+      stop("'newdata$X' (",NROW(newdata$X),"x",NCOL(newdata$X),") is not compatible with the original descriptors",
+           nrow(object$data$X),"x",ncol(object$data$X))
+    if (NROW(newdata$X) != nrow(object$emobj$U))
+      stop("The number of observations in 'newdata$X' does not match the number of observations.")
+    by <- matrix(NA, length(selection$U), ncol(object$data$Y),
+                 dimnames = list(colnames(object$emobj$U)[selection$U], colnames(object$data$Y)))
+    for (i in 1L:length(selection$X))
+      by[i,] <- object$UpYXcb$B[selection$U[i],,selection$X[i]] * as.numeric(
+        t(object$emobj$U[,selection$U[i],drop=FALSE]) %*% (newdata$X[,selection$X[i]] - mean(newdata$X[,selection$X[i]])))
+  } else
+    by <- object$UpYXcb$UpY[selection$U,,drop=FALSE]
+  if (is.null(newdata$meanY))
+    newdata$meanY <- colMeans(object$data$Y)
+  else
+    if (length(newdata$meanY) != ncol(object$data$Y))
+      stop("The number of means in 'newdata$meanY' does not match the number of response variable.")
+  if (is.null(newdata$target))
+    newdata$target <- object$emobj$U
+  else
+    if (ncol(newdata$target) != ncol(object$emobj$U))
+      stop("Incorrect number of eigenfunctions (columns) in 'newdata$meanY': ", ncol(newdata$target),
+           ", while ",ncol(object$emobj$U)," is expected")
+  if (components) {
+    cpns <- array(NA, dim = c(nrow(newdata$target), ncol(object$data$Y), length(selection$U)))
+    dimnames(cpns) <- list(rownames(newdata$target), colnames(object$data$Y), 
+                           colnames(newdata$target)[selection$U])
   }
-  mnew <- mean(newdata) ; newc <- cbind(newc=newdata-mnew)
-  Upnew <- t(object$emobj$U) %*% newc
-  pred <- matrix(0,nrow(object$data),1)
-  if(components) {
-    cpns <- matrix(NA, nrow(object$data), length(which))
-    rownames(cpns) <- rownames(object$emobj$U)
-  }
-  if(length(which) != 0) {
-    by <- object$Upyxcb[which,4] * Upnew[which]
-    pred <- object$emobj$U[,which] %*% cbind(by) + mnew * mean(object$data[,1]) / mean(object$data[,2])
-    if(components) {
-      for (i in 1:length(which)) cpns[,i] <- object$emobj$U[,which[i]] * by[i]
-      colnames(cpns) <- paste("Component", which)
-      }
-  }
-  colnames(pred) <- "predicted" ; rownames(pred) <- rownames(object$emobj$U)
-  if(components) {
-    return(list(predicted=pred, components=cpns))
+  pred <- newdata$target[,selection$U,drop=FALSE] %*% by + rep(newdata$meanY, each = nrow(newdata$target))
+  if (components) {
+    for (i in 1L:length(selection$U))
+      cpns[,,i] <- newdata$target[,selection$U[i],drop=FALSE] %*% by[i,,drop=FALSE]
+    return(list(predicted = pred, components = cpns))
   } else return(pred)
 }
 #

@@ -10,5 +10,4 @@
 // Type declarations (empty)
 
 // C functions declaration
-void mcapermute(double *tau0, double *ry, double *rx, double *us, int *n, int *details, int *nperm);
-void mmcapermute(double *phi0, double *rY, int *m, double *rx, double *us, int *n, int *details, int *nperm);
+void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m, double *rx, double *us, int *n, int *perm_global, int *perm_ind, int *nperm, int *ind);

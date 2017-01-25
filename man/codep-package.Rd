@@ -1,12 +1,13 @@
 \encoding{utf8}
 \name{codep-package}
 \alias{codep-package}
+\alias{codep}
 \docType{package}
 \title{ Functions and methods to perform Multiscale Codependence
   Analysis (MCA) }
 \description{
   Multiscale Codependence Analysis (MCA) consists in assessing the
-  coherence of pairs of variables is space (or time) using the product
+  coherence of pairs of variables in space (or time) using the product
   of their correlation coefficients with series of spatial (or temporal)
   eigenfunctions. That product, which is positive or negative when
   variables show similar or opposing trends, respectively, are called
@@ -24,14 +25,18 @@
   Student's \eqn{t}{t} statistics obtained from each of the two
   variables with a given eigenfunction. The \eqn{\tau}{tau} statistic
   can take both positive and negative values, thereby allowing one to
-  perform one-directional or two-directional testing.
+  perform one-directional or two-directional testing. For multiple
+  response variables, testing is performed using the \eqn{phi}{phi}
+  statistic instead. That statistics is the distribution of the product
+  of two Fisher-Snedocor F statistics (see
+  \code{\link{Product-distribution}} for details).
 }
 \details{
   \tabular{ll}{
     Package: \tab codep\cr
     Type: \tab Package\cr
-    Version: \tab 0.2-1\cr
-    Date: \tab 2013-08-06\cr
+    Version: \tab 0.6-2\cr
+    Date: \tab 2015-11-10\cr
     License: \tab Copyleft\cr
     LazyLoad: \tab yes\cr
   }
@@ -62,10 +67,10 @@
   The package also features an examplary dataset \code{\link{Salmon}}
   containing  76 sampling site positions along a 1520 m river segment as
   well as functions \code{\link{cthreshold}} and
-  \code{\link{minpermute}}, which calculates the testwise type I error rate threshold
-  corresponding to a give familywise threshold and the number of
-  permutations suitable for testing Multiscale Codependence Analysis,
-  respectively.
+  \code{\link{minpermute}}, which calculates the testwise type I error
+  rate threshold corresponding to a given familywise threshold and the
+  minimal number of permutations needed for testing Multiscale
+  Codependence Analysis given the alpha threshold, respectively.
 }
 \references{
   Dray, S.; Legendre, P. and Peres-Neto, P. 2006. Spatial modelling: a
