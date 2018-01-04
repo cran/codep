@@ -1,7 +1,7 @@
 /*******************************************************************
  C code to perform permutation testing Multi-scale Codependence
  Analysis (MCA). Handles both univeriate and multivariate testing.
- Guillaume Guenard - Universite de Montreal - 2008-2015
+ Guillaume Guenard - Universite de Montreal - 2008-2018
  C functions
 *******************************************************************/
 

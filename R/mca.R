@@ -34,12 +34,12 @@ MCA <- function (Y, X, emobj) {
     }
   }
   return(structure(list(data = list(Y = Y, X = X), emobj = emobj, 
-                        UpYXcb = UpYXcb, test = NULL), class = "mca"))
+                        UpYXcb = UpYXcb, test = NULL), class = "cdp"))
 }
 #
-test.mca <- function(object, alpha = 0.05, max.step, response.tests = TRUE) {
-  if (!inherits(object, "mca"))
-    stop("Parameter 'object' must be of class 'mca'.")
+test.cdp <- function(object, alpha = 0.05, max.step, response.tests = TRUE) {
+  if (!inherits(object, "cdp"))
+    stop("Parameter 'object' must be of class 'cdp'.")
   if (missing(max.step))
     max.step <- ncol(object$emobj$U)
   else
@@ -93,12 +93,12 @@ test.mca <- function(object, alpha = 0.05, max.step, response.tests = TRUE) {
                         UpYXcb = object$UpYXcb, test = list(permute = FALSE, 
                                                             significant = signif, global = ttable, response = if (response.tests) respts else NULL, 
                                                             permutations = NULL)),
-                   class = "mca"))
+                   class = "cdp"))
 }
 #
-permute.mca <- function(object, permute, alpha = 0.05, max.step, response.tests = TRUE) {
-  if (!inherits(object, "mca"))
-    stop("Parameter 'object' must be of class 'mca'.")
+permute.cdp <- function(object, permute, alpha = 0.05, max.step, response.tests = TRUE) {
+  if (!inherits(object, "cdp"))
+    stop("Parameter 'object' must be of class 'cdp'.")
   if (missing(max.step))
     max.step <- ncol(object$emobj$U)
   else
@@ -196,10 +196,10 @@ permute.mca <- function(object, permute, alpha = 0.05, max.step, response.tests 
                         UpYXcb = object$UpYXcb, test = list(permute = permute, 
                                                             significant = signif, global = ttable, response = if (response.tests) respts else NULL, 
                                                             permutations = list(global = perm_global, response = if (response.tests) perm_response else NULL))),
-                   class = "mca"))
+                   class = "cdp"))
 }
 #
-print.mca <- function (x, ...) {
+print.cdp <- function (x, ...) {
   cat("\nMultiple Multi-scale Codependence Analysis\n---------------------------\n\n")
   cat(ncol(x$data$X), " explanatory variable", if (ncol(x$data$X)>1L) "s","\n\n", sep = "")
   print(signif(cbind(x$emobj$lambda, x$UpYXcb$CM),4))
@@ -213,7 +213,7 @@ print.mca <- function (x, ...) {
   return(invisible(NULL))
 }
 #
-plot.mca <- function (x, col, col.signif = 2, main = "", ...) {
+plot.cdp <- function (x, col, col.signif = 2, main = "", ...) {
   if(missing(col))
     col <- grey(seq(1, 0, length.out = 256))
   mar <- par()$mar
@@ -239,7 +239,7 @@ plot.mca <- function (x, col, col.signif = 2, main = "", ...) {
   return(invisible(NULL))
 }
 #
-summary.mca <- function(object, ...) {
+summary.cdp <- function(object, ...) {
   cat("\nMultiple Multi-scale Codependence Analysis\n---------------------------\n\n")
   cat(ncol(object$data$X), " explanatory variable",if (ncol(object$data$X)>1) "s","\n\n",sep="")
   if (is.null(object$test)) {
@@ -271,7 +271,7 @@ summary.mca <- function(object, ...) {
   return(invisible(TRUE))
 }
 #
-fitted.mca <- function (object, selection, components = FALSE, ...) {
+fitted.cdp <- function (object, selection, components = FALSE, ...) {
   if(missing(selection)) {
     if (!is.null(object$test))
       selection <- object$test$significant
@@ -300,7 +300,7 @@ fitted.mca <- function (object, selection, components = FALSE, ...) {
     return(fit)
 }
 #
-residuals.mca <- function (object, selection, ...) {
+residuals.cdp <- function (object, selection, ...) {
   if(missing(selection)) {
     if (!is.null(object$test))
       selection <- object$test$significant
@@ -318,9 +318,9 @@ residuals.mca <- function (object, selection, ...) {
   return(res)
 }
 #
-predict.mca <- function (object, selection, newdata, components = FALSE, ...) {
+predict.cdp <- function (object, selection, newdata, components = FALSE, ...) {
   if (missing(newdata))
-    return(fitted.mca(object, selection = selection))
+    return(fitted.cdp(object, selection = selection))
   if(missing(selection)) {
     if (!is.null(object$test))
       selection <- object$test$significant

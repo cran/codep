@@ -43,15 +43,15 @@
   Function \code{\link{MCA}} performs Multiscale Codependence Analysis
   (MCA).
 
-  Functions \code{\link{test.mca}} and \code{\link{permute.mca}} handle
+  Functions \code{\link{test.cdp}} and \code{\link{permute.cdp}} handle
   parametric permutational testing of the codependence coefficients,
   respectively.
 
-  Methods are provided to print and plot \code{\link{mca-class}} objects
-  (\code{\link{print.mca}} and \code{\link{plot.mca}}, respectively) as
-  well as summary (\code{\link{summary.mca}}), fitted values
-  (\code{\link{fitted.mca}}), residuals (\code{\link{residuals.mca}}),
-  and to make predictions (\code{\link{predict.mca}}).
+  Methods are provided to print and plot \code{\link{cdp-class}} objects
+  (\code{\link{print.cdp}} and \code{\link{plot.cdp}}, respectively) as
+  well as summary (\code{\link{summary.cdp}}), fitted values
+  (\code{\link{fitted.cdp}}), residuals (\code{\link{residuals.cdp}}),
+  and to make predictions (\code{\link{predict.cdp}}).
 
   Function \code{\link{eigenmap}} calculates spatial eigenvector maps
   following the approach outlined in Dray et al. (2006), and which are

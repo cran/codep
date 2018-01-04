@@ -22,22 +22,22 @@ minpermute(alpha,nbtest,margin=1,ru=3)
 }
 \value{
   The minimum number of permutation to be used for
-  \code{\link{permute.mca}}.
+  \code{\link{permute.cdp}}.
 }
 \details{
   This function calculate the number of permutations for use with
-  \code{\link{permute.mca}}. Parameter \code{margin} allows to apply a
+  \code{\link{permute.cdp}}. Parameter \code{margin} allows to apply a
   safe margin to the number of permutations. The minimal suitable value
   for this parameter is 1. Parameter \code{ru} allows one to round-up
   the number of permutations. A value of 0 implies no round-up, a value
   of 1 a round-up to the next ten, 2 a round-up to the next hundred, and
   so on. Function \code{minpermute} is called internally by
-  \code{\link{permute.mca}} in case \code{permute = NA}. In that case,
+  \code{\link{permute.cdp}} in case \code{permute = NA}. In that case,
   the margin is set to 10 (\code{margin = 10}) and the outcome is
   rounded-up to the next thousand (\code{ru = 3}). This function is
   meant for users that wish to apply their own margins and round-up
   factors to calculate the number of permutations for use with
-  \code{permute.mca}.
+  \code{permute.cdp}.
 }
 \references{
   Guénard, G., Legendre, P., Boisclair, D., and Bilodeau, M. 2010.
@@ -45,7 +45,7 @@ minpermute(alpha,nbtest,margin=1,ru=3)
   relationships across scales. Ecology 91: 2952-2964
 }
 \seealso{
-  \link{permute.mca}
+  \link{permute.cdp}
 }
 \examples{
 # For a 5\% threshold under 50 tests.

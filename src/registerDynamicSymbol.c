@@ -2,12 +2,14 @@
  C code to perform permutation testing Multi-scale Codependence
  Analysis (MCA). Handles both univeriate and multivariate testing.
  Guillaume Guenard - Universite de Montreal - 2008-2018
- C header
+ C functions
 *******************************************************************/
 
-// Defines (empty)
+#include <R.h>
+#include <Rinternals.h>
+#include <R_ext/Rdynload.h>
 
-// Type declarations (empty)
-
-// C functions declaration
-void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m, double *rx, double *us, int *n, int *perm_global, int *perm_ind, int *nperm, int *ind);
+void R_init_codep(DllInfo* info) {
+  R_registerRoutines(info, NULL, NULL, NULL, NULL);
+  R_useDynamicSymbols(info, TRUE);
+}

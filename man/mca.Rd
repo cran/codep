@@ -1,15 +1,15 @@
 \encoding{utf8}
 \name{MCA}
 \alias{MCA}
-\alias{test.mca}
-\alias{permute.mca}
+\alias{test.cdp}
+\alias{permute.cdp}
 \title{ Multiple-descriptors, Multiscale Codependence Analysis }
 \description{ Functions to perform Multiscale Codependence Analysis
   (MCA) }
 \usage{
 MCA(Y, X, emobj)
-test.mca(object, alpha = 0.05, max.step, response.tests = TRUE)
-permute.mca(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
+test.cdp(object, alpha = 0.05, max.step, response.tests = TRUE)
+permute.cdp(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
 }
 \arguments{
   \item{Y}{ a numeric matrix or vector containing the response
@@ -17,7 +17,7 @@ permute.mca(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
   \item{X}{ a numeric matrix or vector containing the explanatory
     variable(s). }
   \item{emobj}{ a \code{\link{eigenmap-class}} object. }
-  \item{object}{ a \code{\link{mca-class}} object. }
+  \item{object}{ a \code{\link{cdp-class}} object. }
   \item{alpha}{ type I (\eqn{\alpha}{alpha}) error threshold used by the
     testing procedure. }
   \item{max.step}{ maximum number of steps to perform when testing for
@@ -33,18 +33,18 @@ permute.mca(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
   correlation-like (i.e.codependence) coefficients between two variables
   with respect to structuring variables (Moran's eigenvector maps). The
   purpose of this function is limited to parameter fitting. Test
-  procedures are handled through \code{test.mmca} (parametric testing)
-  or \code{permute.mmca} (permutation testing). Additionaly, methods are
+  procedures are handled through \code{test.cdp} (parametric testing)
+  or \code{permute.cdp} (permutation testing). Additionaly, methods are
   provided for printing, displaying the testing summary, plotting
   results, calculating fitted and residuals values, and making
   predictions. It is noteworthy that the test procedure used by
   \code{MCA} deviates from the standard R workflow since intermediate
-  testing functions (\code{test.mca} and \code{permute.mca}) need
+  testing functions (\code{test.cdp} and \code{permute.cdp}) need
   first to be called before any testing be performed. For \code{MCA},
-  testing functionalities had been moved away from summary.mca because
+  testing functionalities had been moved away from summary.cdp because
   testing is computationally intensive.}
 \value{
-  A \code{\link{mca-class}} object.
+  A \code{\link{cdp-class}} object.
 }
 \references{
   Guénard, G., Legendre, P., Boisclair, D., and Bilodeau, M. 2010.
@@ -76,12 +76,12 @@ map1 <- eigenmap(x=Salmon[,"Position"],weighting=Wf.binary,boundaries=c(0,20))
 ## Case of a single descriptor:
 mca1 <- MCA(Y=Abundance,X=Environ[,"Substrate",drop=FALSE],emobj=map1)
 mca1
-mca1_partest <- test.mca(mca1)
+mca1_partest <- test.cdp(mca1)
 mca1_partest
 summary(mca1_partest)
 par(mar = c(6,4,2,4))
 plot(mca1_partest, las = 3)
-mca1_pertest <- permute.mca(mca1)
+mca1_pertest <- permute.cdp(mca1)
 mca1_pertest
 summary(mca1_pertest)
 plot(mca1_pertest, las = 3)
@@ -91,13 +91,12 @@ mca1_pertest$UpYXcb$C # Array containing the codependence coefficients
 mca2 <- MCA(Y=log1p(as.matrix(Salmon[,"Abundance",drop=FALSE])),
             X=as.matrix(Salmon[,3L:5]),emobj=map1)
 mca2
-mca2_partest <- test.mca(mca2)
+mca2_partest <- test.cdp(mca2)
 mca2_partest
 summary(mca2_partest)
 par(mar = c(6,4,2,4))
 plot(mca2_partest, las = 3)
-\dontrun{
-mca2_pertest <- permute.mca(mca2)
+mca2_pertest <- permute.cdp(mca2)
 mca2_pertest
 summary(mca2_pertest)
 plot(mca2_pertest, las = 3)
@@ -115,7 +114,7 @@ map2 <- eigenmap(x=Doubs.geo[,"DFS"])
 #
 mca3 <- MCA(Y=log1p(Doubs.fish),X=Doubs.env,emobj=map2)
 mca3
-mca3_pertest <- permute.mca(mca3)
+mca3_pertest <- permute.cdp(mca3)
 mca3_pertest
 summary(mca3_pertest)
 par(mar = c(6,4,2,4))
@@ -159,7 +158,6 @@ mtext(side=4, "log(Abundance+1)", line = 2.5)
 #
 ###### End {Doubs exemple}
 #
-}
 ###### Begin {Oribatid exemple}
 #
 data(Mite)
@@ -167,7 +165,7 @@ data(Mite)
 map3 <- eigenmap(x = mite.geo)
 # Organize the environmental variables
 mca4 <- MCA(Y = log1p(mite.species), X = mite.env, emobj = map3)
-mca4_partest <- test.mca(mca4, response.tests = FALSE)
+mca4_partest <- test.cdp(mca4, response.tests = FALSE)
 summary(mca4_partest)
 plot(mca4_partest, las = 2, lwd = 2)
 plot(mca4_partest, col = rainbow(1200)[1L:1000], las = 3, lwd = 4,

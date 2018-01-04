@@ -49,7 +49,7 @@ ptau(q, nu, lower.tail = TRUE, tol = .Machine$double.eps ^ 0.5)
   \code{dtau} and \code{ptau} are similar to \code{dphi} integrates
   \code{pphi}, but with f(x) and f(y) being two Student's t distribution
   with \code{nu} degrees of freedom. \code{} It is called by functions
-  \code{\link{test.mca}} and \code{\link{permute.mca}} to perform
+  \code{\link{test.cdp}} and \code{\link{permute.cdp}} to perform
   hypothesis tests for single response variables, in which case
   unilateral tests can be performed.
 }
@@ -66,7 +66,7 @@ ptau(q, nu, lower.tail = TRUE, tol = .Machine$double.eps ^ 0.5)
   Multiscale Codependence Analysis. Ecology paper to be.
 }
 \seealso{
-  \link{test.mca}
+  \link{test.cdp}
 }
 \examples{
 #

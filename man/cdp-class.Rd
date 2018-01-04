@@ -1,29 +1,29 @@
 \encoding{utf8}
-\name{mca-class}
-\alias{mca}
-\alias{mca-class}
-\alias{print.mca}
-\alias{summary.mca}
-\alias{plot.mca}
-\alias{fitted.mca}
-\alias{residuals.mca}
-\alias{predict.mca}
+\name{cdp-class}
+\alias{cdp}
+\alias{cdp-class}
+\alias{print.cdp}
+\alias{summary.cdp}
+\alias{plot.cdp}
+\alias{fitted.cdp}
+\alias{residuals.cdp}
+\alias{predict.cdp}
 \docType{class}
 \title{ Class and methods for Multiscale Codependence Analysis involving
 multiple descriptors }
 \description{
-  Class and methods to handle Multiscale Codependence Analysis (MMCA)
+  Class and methods to handle Multiscale Codependence Analysis (mMCA)
 }
 \usage{
-\method{print}{mca}(x, ...)
-\method{plot}{mca}(x, col, col.signif=2, main="", ...)
-\method{summary}{mca}(object, ...)
-\method{fitted}{mca}(object, selection, components=FALSE, ...)
-\method{residuals}{mca}(object, selection, ...)
-\method{predict}{mca}(object, selection, newdata, components=FALSE, ...)
+\method{print}{cdp}(x, ...)
+\method{plot}{cdp}(x, col, col.signif=2, main="", ...)
+\method{summary}{cdp}(object, ...)
+\method{fitted}{cdp}(object, selection, components=FALSE, ...)
+\method{residuals}{cdp}(object, selection, ...)
+\method{predict}{cdp}(object, selection, newdata, components=FALSE, ...)
 }
 \arguments{
-  \item{x, object}{ A \code{\link{mca-class}} object. }
+  \item{x, object}{ A \code{\link{cdp-class}} object. }
   \item{col}{ A vector of color values to be used for plotting the
     multivariate codependence coefficients. }
   \item{col.signif}{ Color of the frame used to mark the statistically
@@ -62,9 +62,14 @@ multiple descriptors }
   provided, or if \code{newdata} is omitted when calling the prediction
   method, the behaviour of the \code{predict} method is identical to
   that of the \code{fitted} method.
+
+  From version 0.7-1, \code{\link{cdp-class}} replaces the former class
+  \code{mca} used by \code{\link{codep-package}} because the standard
+  package \code{MASS} also had S3 methods for a class named \code{mca}
+  that were overwritten by those of \code{\link{codep-package}}.
 }
 \value{
-  \code{\link{mca-class}} objects contain:
+  \code{\link{cdp-class}} objects contain:
   \item{data}{ A list with two elements: the first being a copy of the
     response (\code{Y}) and the second being a copy of the explanatory
     variables (\code{X}). This is the variables that were given to
@@ -81,13 +86,13 @@ multiple descriptors }
     (\code{CM}) is a matrix of the multivariate codependence
     coefficients. }
   \item{test}{ Results of statistical testing as performed by
-    \code{\link{test.mca}} or \code{\link{permute.mca}}. \code{NULL}
+    \code{\link{test.cdp}} or \code{\link{permute.cdp}}. \code{NULL}
     if no testing was performed, such as when only \code{\link{MCA}}
     had been called. The results of statistical testing is a list
     containing the following members: }
   \item{$permute}{ The number of randomized permutations used by
-    \code{permute.mmca} for permutation testing. \code{0} or \code{FALSE}
-    for parametric testing obtained using \code{\link{test.mca}}. }
+    \code{permute.cdp} for permutation testing. \code{0} or \code{FALSE}
+    for parametric testing obtained using \code{\link{test.cdp}}. }
   \item{$significant}{ The indices of codependence coefficient describing
     statistically significant codependence between \code{Y} and
     \code{X}, in decreasing order of magnitude. }
