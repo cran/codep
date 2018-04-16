@@ -3,13 +3,18 @@
 \alias{MCA}
 \alias{test.cdp}
 \alias{permute.cdp}
+\alias{parPermute.cdp}
 \title{ Multiple-descriptors, Multiscale Codependence Analysis }
 \description{ Functions to perform Multiscale Codependence Analysis
   (MCA) }
 \usage{
 MCA(Y, X, emobj)
 test.cdp(object, alpha = 0.05, max.step, response.tests = TRUE)
-permute.cdp(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
+permute.cdp(object, permute, alpha = 0.05, max.step,
+            response.tests = TRUE)
+parPermute.cdp(object, permute, alpha = 0.05, max.step,
+               response.tests = TRUE, nnode, seeds, verbose = TRUE,
+               ...)
 }
 \arguments{
   \item{Y}{ a numeric matrix or vector containing the response
@@ -26,7 +31,12 @@ permute.cdp(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
     response variables. }
   \item{permute}{ The number of random permutations used for
     testing. When omitted, the number of permutations is calculated
-    using function \code{\link{minpermute}}. }
+    using function \code{\link{minpermute}}.}
+  \item{nnode}{ The number of parallel computation nodes. }
+  \item{seeds}{ Random number generator seeds for parallel the
+    computation nodes. }
+  \item{verbose}{ Whether to return user notifications. }
+  \item{...}{ Parameters to be passed to \code{parallel::makeCluster()}}
 }
 \details{
   Multiscale Codependence Analysis (MCA) allows to calculate
@@ -42,7 +52,15 @@ permute.cdp(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
   testing functions (\code{test.cdp} and \code{permute.cdp}) need
   first to be called before any testing be performed. For \code{MCA},
   testing functionalities had been moved away from summary.cdp because
-  testing is computationally intensive.}
+  testing is computationally intensive. Function \code{parPermute.cdp}
+  allows the user to spread the number of permutation on many
+  computation nodes. It relies on package \code{parallel}. Omitting
+  parameter \code{nnode} lets function \code{parallel::detectCores()}
+  specify the number of node. Similarly, omitting parameter \code{seeds}
+  lets the draw seeds uniformly between
+  \code{±.Machine$integer.max}. If needed, one may pass initialization
+  parameters to \code{parallel::makeCluster()}.
+}
 \value{
   A \code{\link{cdp-class}} object.
 }
@@ -51,9 +69,9 @@ permute.cdp(object, permute, alpha = 0.05, max.step, response.tests = TRUE)
   Multiscale codependence analysis: an integrated approach to analyse
   relationships across scales. Ecology 91: 2952-2964
   
-  Guénard, G. Legendre, P., and crews. 2016. Assessing multivariate
-  relationships across spatial scales: introducing the Multivariate
-  Multiscale Codependence Analysis. Ecology paper to be.
+  Guénard, G. Legendre, P. 2018. Bringing multivariate support to
+  multiscale codependence analysis: Assessing the drivers of community
+  structure across spatial scales. Meth. Ecol. Evol. 9: 292-304
 }
 \author{ Guillaume Guénard, Département des sciences biologiques,
   Université de Montréal, Montréal, Québec, Canada. }
@@ -82,6 +100,10 @@ summary(mca1_partest)
 par(mar = c(6,4,2,4))
 plot(mca1_partest, las = 3)
 mca1_pertest <- permute.cdp(mca1)
+\dontrun{
+## or:
+mca1_pertest <- parPermute.cdp(mca1,permute=999999)
+}
 mca1_pertest
 summary(mca1_pertest)
 plot(mca1_pertest, las = 3)
@@ -97,6 +119,10 @@ summary(mca2_partest)
 par(mar = c(6,4,2,4))
 plot(mca2_partest, las = 3)
 mca2_pertest <- permute.cdp(mca2)
+\dontrun{
+or:
+mca2_pertest <- parPermute.cdp(mca2,permute=999999)
+}
 mca2_pertest
 summary(mca2_pertest)
 plot(mca2_pertest, las = 3)
@@ -115,6 +141,10 @@ map2 <- eigenmap(x=Doubs.geo[,"DFS"])
 mca3 <- MCA(Y=log1p(Doubs.fish),X=Doubs.env,emobj=map2)
 mca3
 mca3_pertest <- permute.cdp(mca3)
+\dontrun{
+## or:
+mca3_pertest <- parPermute.cdp(mca3,permute=999999)
+}
 mca3_pertest
 summary(mca3_pertest)
 par(mar = c(6,4,2,4))

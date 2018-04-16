@@ -61,9 +61,9 @@ ptau(q, nu, lower.tail = TRUE, tol = .Machine$double.eps ^ 0.5)
   Multiscale codependence analysis: an integrated approach to analyse
   relationships across scales. Ecology 91: 2952-2964
 
-  Guénard, G. Legendre, P., and crews. 2016. Assessing multivariate
-  relationships across spatial scales: introducing the Multivariate
-  Multiscale Codependence Analysis. Ecology paper to be.
+  Guénard, G. Legendre, P. 2018. Bringing multivariate support to
+  multiscale codependence analysis: Assessing the drivers of community
+  structure across spatial scales. Meth. Ecol. Evol. 9: 292-304
 }
 \seealso{
   \link{test.cdp}

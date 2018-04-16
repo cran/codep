@@ -80,6 +80,10 @@
   Guénard, G., Legendre, P., Boisclair, D., and Bilodeau, M. 2010.
   Multiscale codependence analysis: an integrated approach to analyse
   relationships across scales. Ecology 91: 2952-2964
+
+  Guénard, G. Legendre, P. 2018. Bringing multivariate support to
+  multiscale codependence analysis: Assessing the drivers of community
+  structure across spatial scales. Meth. Ecol. Evol. 9: 292-304
 }
 \seealso{
   Legendre, P. and Legendre, L. 2012. Numerical Ecology, 3rd English

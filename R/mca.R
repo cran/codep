@@ -104,7 +104,7 @@ permute.cdp <- function(object, permute, alpha = 0.05, max.step, response.tests 
   else
     max.step <- max.step[1L]
   if (missing(permute))
-    permute <- codep::minpermute(alpha, ncol(object$emobj$U) * ncol(object$data$X), 10L, 3L)
+    permute <- minpermute(alpha, ncol(object$emobj$U) * ncol(object$data$X), 10L, 3L)
   else
     permute <- permute[1L]
   us <- matrix(NA, nrow(object$emobj$U), 1L)
@@ -199,16 +199,163 @@ permute.cdp <- function(object, permute, alpha = 0.05, max.step, response.tests 
                    class = "cdp"))
 }
 #
+parPermute.cdp <- function (object, permute, alpha = 0.05, max.step, response.tests = TRUE, nnode, seeds, verbose = TRUE, ...) {
+    if (!inherits(object, "cdp"))
+        stop("Parameter 'object' must be of class 'cdp'.")
+    if (missing(max.step))
+        max.step <- ncol(object$emobj$U)
+    else
+        max.step <- max.step[1L]
+    if (missing(permute))
+        permute <- minpermute(alpha, ncol(object$emobj$U) * ncol(object$data$X), 10L, 3L)
+    else
+        permute <- permute[1L]
+    if (missing(nnode))
+        nnode <- detectCores()
+    if(verbose)
+        cat("Starting a cluster of", nnode, "nodes... ")
+    cl <- makeCluster(nnode, ...)
+    nnode <- length(cl)
+    if(verbose)
+        cat("done.\n")
+    if(nnode < 2L)
+        warning("Only a single worker could be recruited on that system.\nConsider using permute.mca() instead.")
+    if(verbose)
+        cat("Initializing workers:\n")
+    if(missing(seeds))
+        seeds <- as.integer(runif(nnode, -.Machine$integer.max, .Machine$integer.max))
+    if(verbose)
+        cat("Random seeds given to workers:", seeds, "\n")
+    parSapply(cl = cl, X = seeds, FUN = function(x) set.seed(x))
+    parSapply(cl = cl, X = 1L:nnode, function(x) require(codep))
+    wpermute <- rep(permute%/%nnode, nnode)
+    if(permute%%nnode)
+        wpermute[1L:(permute%%nnode)] <- wpermute[1L:(permute%%nnode)]+1L
+    C_mcapermute <- function(X, phi_global0,tau_ind0, rY, rx, us, perm_global, perm_response,ind)
+        .C("mcapermute",
+           as.double(phi_global0),
+           as.double(abs(tau_ind0)),
+           as.double(rY),
+           as.integer(ncol(rY)),
+           as.double(rx),
+           as.double(us),
+           as.integer(nrow(us)),
+           as.integer(perm_global),
+           as.integer(perm_response),
+           as.integer(X),
+           as.integer(ind))[8L:9L]
+    us <- matrix(NA, nrow(object$emobj$U), 1L)
+    uspY <- matrix(NA, 1L, ncol(object$data$Y), dimnames = list(NULL, colnames(object$data$Y)))
+    uspX <- matrix(NA, 1L, ncol(object$data$X), dimnames = list(NULL, colnames(object$data$X)))
+    Yc <- object$data$Y - rep(colMeans(object$data$Y), each = nrow(object$data$Y))
+    Xc <- object$data$X - rep(colMeans(object$data$X), each = nrow(object$data$X))
+    ord <- order(apply(object$UpYXcb$CM, 1L, max), decreasing = TRUE)
+    bstX <- apply(object$UpYXcb$CM, 1L, which.max)
+    ttable <- matrix(NA, 0L, 6L, dimnames = list(NULL, c("Variable", "phi", "df1", "df2", "Testwise p", "Familywise p")))
+    perm_global <- matrix(NA, 0L, 2L, dimnames = list(NULL, c("phi*<phi", "phi*>=phi")))
+    if (response.tests) {
+        respts <- array(numeric(0), dim = c(ncol(object$data$Y), 4L, 0L),
+                        dimnames = list(colnames(object$data$Y),
+                                        c("tau", "df", "Testwise p", "Familywise p"), NULL))
+        perm_response <- array(numeric(0), dim = c(ncol(object$data$Y), 3L, 0L),
+                               dimnames = list(colnames(object$data$Y),
+                                               c("tau*<=-|tau|", "-|tau|<tau*<|tau|", "tau*>=|tau|"),
+                                               NULL))
+    }
+    if(verbose)
+        cat("Performing permutation tests")
+    step <- 1L
+    while (step != 0L) {
+        us[] <- object$emobj$U[,ord[step]]
+        uspY[] <- object$UpYXcb$UpY[ord[step],]
+        uspX[] <- object$UpYXcb$UpX[ord[step],]
+        df2 <- nrow(object$data$Y) - step - 1L
+        Yhat <- us %*% uspY
+        Xhat <- us %*% uspX
+        Yc <- Yc - Yhat
+        Xc <- Xc - Xhat
+        phi_global0 <- sum(Yhat^2) * sum(Xhat[,bstX[ord[step]]]^2)/(sum(Yc^2) * sum(Xc[,bstX[ord[step]]]^2))
+        ttable <- rbind(ttable, c(bstX[ord[step]], df2^2 * phi_global0, ncol(object$data$Y), df2, NA, NA))
+        perm_global <- rbind(perm_global, c(0L, 0L))
+        if (response.tests) {
+            tau_resp0 <- uspY[1L,] * uspX[bstX[ord[step]]] * (colSums(Yc^2) * sum(Xc[,bstX[ord[step]]]^2))^-0.5
+            respts <- array(as.numeric(respts),
+                            dim = c(dim(respts)[1L],dim(respts)[2L], dim(respts)[3L] + 1L),
+                            dimnames = c(dimnames(respts)[1L:2L],list(NULL)))
+            respts[, 1L, step] <- df2 * tau_resp0
+            respts[, 2L, step] <- df2
+            perm_response <- array(as.numeric(perm_response),
+                                   dim = c(dim(perm_response)[1L], dim(perm_response)[2L],
+                                           dim(perm_response)[3L] + 1L),
+                                   dimnames = c(dimnames(perm_response)[1L:2L],list(NULL)))
+            perm_response[,,step] <- 0
+            wtmp <- parLapply(cl = cl, X = wpermute, fun = C_mcapermute, phi_global0 = phi_global0,
+                              tau_ind0 = tau_resp0, rY = Yc, rx = Xc[,bstX[ord[step]]], us = us,
+                              perm_global = perm_global[step,], perm_response = perm_response[,,step], ind=TRUE)
+            tmp <- wtmp[[1L]]
+            if(nnode > 1L)
+                for(i in 2L:nnode) {
+                    tmp[[1L]] <- tmp[[1L]] + wtmp[[i]][[1L]]
+                    tmp[[2L]] <- tmp[[2L]] + wtmp[[i]][[2L]]
+                }
+            perm_global[step,] <- tmp[[1L]]
+            perm_global[step,2L] <- perm_global[step,2L] + 1
+            perm_response[,,step] <- tmp[[2L]]
+            perm_response[,3L,step] <- perm_response[,3L,step] + 1
+        }
+        else {
+            wtmp <- parLapply(cl = cl, X = wpermute, fun = C_mcapermute, phi_global0 = phi_global0,
+                              tau_ind0 = tau_resp0, rY = Yc, rx = Xc[,bstX[ord[step]]], us = us,
+                              perm_global = perm_global[step,], perm_response = integer(), ind = FALSE)
+            tmp <- wtmp[[1L]][[1L]]
+            if(nnode > 1L)
+                for(i in 2L:nnode)
+                    tmp <- tmp + wtmp[[i]][[1L]]
+            perm_global[step,] <- tmp
+            perm_global[step,2L] <- perm_global[step,2L] + 1
+        }
+        ttable[step,5L] <- perm_global[step,2L]/(permute + 1)
+        ttable[step,6L] <- 1 - (1 - ttable[step,5L])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+        if (response.tests) {
+            respts[,3L,step] <- (perm_response[,1L,step] + perm_response[,3L,step])/(permute + 1)
+            respts[,4L,step] <- 1 - (1 - respts[,3L,step])^((ncol(object$emobj$U) - step + 1) * ncol(object$data$X))
+        }
+        if(verbose)
+            cat(".")
+        if (ttable[step,6L] > alpha || step >= max.step) {
+            rownames(ttable) <- colnames(object$emobj$U)[ord[1L:step]]
+            if (response.tests) {
+                dimnames(respts)[[3L]] <- rownames(ttable)
+                dimnames(perm_response)[[3L]] <- rownames(ttable)
+            }
+            step <- 0
+        } else step <- step + 1
+    }
+    if(verbose)
+        cat("done.\nStopping cluster.\n")
+    parallel::stopCluster(cl)
+    signif <- list(U = ord[which(ttable[, 6L] <= alpha)])
+    signif$X <- bstX[signif$U]
+    return(structure(list(data = object$data, emobj = object$emobj,
+                          UpYXcb = object$UpYXcb,
+                          test = list(permute = permute, significant = signif,
+                                      global = ttable, response = if (response.tests) respts else NULL,
+                                      permutations = list(global = perm_global,
+                                                          response = if (response.tests) perm_response else NULL)),
+                          seeds=seeds),
+                     class = "cdp"))
+}
+#
 print.cdp <- function (x, ...) {
   cat("\nMultiple Multi-scale Codependence Analysis\n---------------------------\n\n")
-  cat(ncol(x$data$X), " explanatory variable", if (ncol(x$data$X)>1L) "s","\n\n", sep = "")
+  cat(ncol(x$data$X), " explanatory variable", if (ncol(x$data$X) > 1L) "s","\n\n", sep = "")
   print(signif(cbind(x$emobj$lambda, x$UpYXcb$CM),4))
   if (!is.null(x$test)) {
     cat("--------------------\nGlobal testing information is available\n")
     if (!is.null(x$test$response)) 
       cat("Hypothesis test",if (ncol(x$data$X)>1L) "s"," also available for the response",
-          if (ncol(x$data$X)>1L) "s", "\n", sep = "")
-    else cat("Individual test", if (ncol(x$data$X)>1L) "s"," unavailable\n", sep = "")
+          if (ncol(x$data$X) > 1L) "s", "\n", sep = "")
+    else cat("Individual test", if (ncol(x$data$X) > 1L) "s"," unavailable\n", sep = "")
   } else cat("\n")
   return(invisible(NULL))
 }

@@ -4,7 +4,8 @@
 # Imports
 importFrom("grDevices", "grey")
 importFrom("graphics", "axis", "box", "hist", "image", "layout", "locator", "par", "plot", "points", "rect", "title")
-importFrom("stats", "as.dist", "df", "dist", "dt", "hclust", "integrate")
+importFrom("stats", "as.dist", "df", "dist", "dt", "hclust", "integrate", "runif")
+importFrom("parallel", "detectCores", "makeCluster", "parSapply", "parLapply")
 #
 # Exports with patterns
 exportPattern("^[^\\.]")
