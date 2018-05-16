@@ -3,9 +3,12 @@
 \alias{codep-package}
 \alias{codep}
 \docType{package}
-\title{ Functions and methods to perform Multiscale Codependence
-  Analysis (MCA) }
+\title{
+\packageTitle{codep}
+}
 \description{
+  \packageDescription{codep}
+  
   Multiscale Codependence Analysis (MCA) consists in assessing the
   coherence of pairs of variables in space (or time) using the product
   of their correlation coefficients with series of spatial (or temporal)
@@ -32,14 +35,6 @@
   \code{\link{Product-distribution}} for details).
 }
 \details{
-  \tabular{ll}{
-    Package: \tab codep\cr
-    Type: \tab Package\cr
-    Version: \tab 0.6-2\cr
-    Date: \tab 2015-11-10\cr
-    License: \tab Copyleft\cr
-    LazyLoad: \tab yes\cr
-  }
   Function \code{\link{MCA}} performs Multiscale Codependence Analysis
   (MCA).
 
@@ -71,6 +66,15 @@
   rate threshold corresponding to a given familywise threshold and the
   minimal number of permutations needed for testing Multiscale
   Codependence Analysis given the alpha threshold, respectively.
+
+  The DESCRIPTION file:
+  \packageDESCRIPTION{codep}
+  \packageIndices{codep}
+}
+\author{
+  \packageAuthor{codep}
+
+  Maintainer: \packageMaintainer{codep}
 }
 \references{
   Dray, S.; Legendre, P. and Peres-Neto, P. 2006. Spatial modelling: a
@@ -85,9 +89,47 @@
   multiscale codependence analysis: Assessing the drivers of community
   structure across spatial scales. Meth. Ecol. Evol. 9: 292-304
 }
+\keyword{ package }
 \seealso{
   Legendre, P. and Legendre, L. 2012. Numerical Ecology, 3rd English
   edition. Elsevier Science B.V., Amsterdam, The Neatherlands.
 }
-\author{ Guillaume Guénard, Département des sciences biologiques,
-  Université de Montréal, Montréal, Québec, Canada. }
+\examples{
+data(Mite)
+emap <- eigenmap(x = mite.geo,weighting=Wf.RBF,wpar=0.1)
+emap
+# Organize the environmental variables
+mca0 <- MCA(Y = log1p(mite.species), X = mite.env, emobj = emap)
+mca0_partest <- test.cdp(mca0, response.tests = FALSE)
+summary(mca0_partest)
+plot(mca0_partest, las = 2, lwd = 2)
+plot(mca0_partest, col = rainbow(1200)[1L:1000], las = 3, lwd = 4,
+     main = "Codependence diagram", col.signif = "white")
+#
+rng <- list(x = seq(min(mite.geo[,"x"]) - 0.1, max(mite.geo[,"x"]) + 0.1, 0.05),
+            y = seq(min(mite.geo[,"y"]) - 0.1, max(mite.geo[,"y"]) + 0.1, 0.05))
+grid <- cbind(x = rep(rng[["x"]], length(rng[["y"]])),
+              y = rep(rng[["y"]], each = length(rng[["x"]])))
+newdists <- matrix(NA, nrow(grid), nrow(mite.geo))
+for(i in 1L:nrow(grid)) {
+  newdists[i,] <- ((mite.geo[,"x"] - grid[i,"x"])^2 +
+                    (mite.geo[,"y"] - grid[i,"y"])^2)^0.5
+}
+#
+spmeans <- colMeans(mite.species)
+pca0 <- svd(log1p(mite.species) - rep(spmeans, each = nrow(mite.species)))
+#
+prd0 <- predict(mca0_partest,
+                newdata = list(target = eigenmap.score(emap, newdists)))
+Uprd0 <- (prd0 - rep(spmeans, each = nrow(prd0))) %*% pca0$v %*% diag(pca0$d^-1)
+#
+### Printing the response variable
+prmat <- Uprd0[,1L]
+dim(prmat) <- c(length(rng$x),length(rng$y))
+zlim <- c(min(min(prmat),min(pca0$u[,1L])),max(max(prmat),max(pca0$u[,1L])))
+image(z = prmat, x = rng$x, y = rng$y, asp = 1, zlim = zlim,
+      col = rainbow(1200L)[1L:1000], ylab = "y", xlab = "x")
+points(x = mite.geo[,"x"], y = mite.geo[,"y"], pch = 21,
+       bg = rainbow(1200L)[round(1+(999*(pca0$u[,1L]-zlim[1L])/(zlim[2L]-zlim[1L])),0)])
+#
+}

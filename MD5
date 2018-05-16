@@ -1,9 +1,10 @@
-2fdb3b8b24e7fa1aa15b1f369bd45017 *DESCRIPTION
+85785b69117d76fc68db7682dde6d91d *DESCRIPTION
 06536488784e0bd0a06b8444ca2e6019 *NAMESPACE
 ebbefbcea260b0f88f8fc53b46d1e116 *R/Auxiliary.R
-6677fff17aa48890ccdf7e59ab675c12 *R/eigenmap.R
+d5f4b587a7f925ad444dfc2913eabc6d *R/eigenmap.R
 b7aa25e10b654451b78ec78489944a3c *R/gcd.R
 f89febd8d25eeee9544692020fbf797c *R/mca.R
+f15546cc31aee479a655a4078162b97d *build/partial.rdb
 a745ac9a0875085fd1de37dce082c131 *data/Doubs.rda
 5d7e64906df0fc5b6bebbd2797bc47c3 *data/Mite.rda
 063615d0666f112bae3edb7327158c6c *data/Salmon.rda
@@ -11,10 +12,10 @@ a745ac9a0875085fd1de37dce082c131 *data/Doubs.rda
 376ed0e780070bb49a7b0c4e3ddd8df3 *man/Mite.Rd
 679a0fd7b776cf48641b81567e7885ad *man/Salmon.Rd
 fe4d9f47633555f3da5e83796cb4556e *man/cdp-class.Rd
-16577ad82d389e0a351fcfa529f1d68b *man/codep-package.Rd
+f693fb1a07e2ff2ef5e6dcbb0d953248 *man/codep-package.Rd
 169214b54321de9cb4aa6f3d0a97050a *man/cthreshold.Rd
 8479265dd7a26e946ed0f078ec227d48 *man/eigenmap-class.Rd
-8468b5ee13b18296e22f474522a14870 *man/eigenmap.Rd
+419dd38ec41a86ca94dfa3879f276028 *man/eigenmap.Rd
 62507a86f825ec72d19c0d6d340e6f54 *man/gcd.Rd
 6c51bf2ffaea632523ad2c1280c966a3 *man/mca.Rd
 b58a7b918a5b80264da290df00bbe271 *man/minpermute.Rd

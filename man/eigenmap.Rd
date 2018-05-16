@@ -2,6 +2,7 @@
 \name{eigenmap}
 \alias{eigenmap}
 \alias{Wf.sqrd}
+\alias{Wf.RBF}
 \alias{Wf.binary}
 \alias{Wf.PCNM}
 \alias{Wf.Drayf1}
@@ -16,6 +17,7 @@
 \usage{
 eigenmap(x,opt.coord=NA,weighting=Wf.sqrd,boundaries,wpar,select=.Machine$double.eps^0.5)
 Wf.sqrd(D)
+Wf.RBF(D,wpar=1)
 Wf.binary(D,boundaries)
 Wf.PCNM(D,boundaries)
 Wf.Drayf1(D,boundaries)
@@ -37,25 +39,30 @@ eigenmap.score(object,target)
     giving the boundaries of the within which locations are regarded as
     neighbour and a third parameter named \code{wpar} containing any
     other weighting function parameter.
-    
-    \code{Wf.binary} (default value) the spatial weighting matrix is simply
-    the connectivity matrix,
+
+    \code{Wf.sqrd} consists in taking \eqn{w_{i,j} =
+      -0.5*d_{i,j}}{w_{i,j} = -0.5*d_{i,j}} and does not involve any
+    trunction.
+
+    \code{Wf.sqrd} consists in taking \eqn{w_{i,j} =
+      exp(-wpar*d_{i,j}^2)}{w_{i,j} = exp(-wpar*d_{i,j}^2)} and does not
+    involve any trunction.
+
+    \code{Wf.binary} (default value) the spatial weighting matrix is
+    simply the connectivity matrix,
 
     \code{Wf.PCNM} is \eqn{a_{i,j} = 1 - (d_{i,j} /
       (4*boundaries_2))^2}{a_{i,j} = 1 - (d_{i,j} / (4*boundaries_2))^2}
-    
-    \code{Wf.Drayf1} is \eqn{a_{i,j} = 1 - (d_{i,j} / d_{max})}{a_{i,j} = 1 -
-      (d_{i,j} / d_max)} where \eqn{d_max}{dmax} is the distance between
-      the two most distant locations in the set,
-   
-    \code{Wf.Drayf2} is \eqn{a_{i,j} = 1 - (d_{i,j} / d_{max})^{wpar}}{a_{i,j}
-      = 1 - (d_{i,j} / d_max)^wpar},
-    
+
+    \code{Wf.Drayf1} is \eqn{a_{i,j} = 1 - (d_{i,j} / d_{max})}{a_{i,j}
+      = 1 - (d_{i,j} / d_max)} where \eqn{d_max}{dmax} is the distance
+      between the two most distant locations in the set,
+
+    \code{Wf.Drayf2} is \eqn{a_{i,j} = 1 - (d_{i,j} /
+      d_{max})^{wpar}}{a_{i,j} = 1 - (d_{i,j} / d_max)^wpar},
+
     \code{Wf.Drayf3} is \eqn{a_{i,j} = 1 / d_{i,j}^{wpar}}{a_{i,j} = 1 /
      d_{i,j}^wpar}, and
-
-    \code{Wf.sqrd} consists in taking \eqn{w_{i,j} = -0.5*d_{i,j}}{w_{i,j}
-      = -0.5*d_{i,j}} and does not involve any trunction.
 
     Functions \code{Wf.Drayf1}, \code{Wf.Drayf2}, and \code{Wf.Drayf3}
     were proposed by Dray et al. (2006) and function \code{PCNM} was
@@ -76,7 +83,8 @@ eigenmap.score(object,target)
     for the maximum. Values \code{NA} indicates the function to take the
     minimum value that allow every locations to form a single cluster
     following single linkage clustering as a maximum value (obtained
-    from \code{\link{hclust}}}. Ignored when \code{weighting="sqrd"}.
+    from \code{\link{hclust}}}. Ignored when \code{weighting="Wf.sqrd"}
+    or \code{weighting="Wf.RBF"}.
   \item{wpar}{ Weighting function parameters. }
   \item{select}{ The smallest absolute eigenvalue for eigenfunctions to
     be considered as a suitable predictive variables. Default value
@@ -110,14 +118,14 @@ eigenmap.score(object,target)
     every distances within a user-defined trunction interval are taken
     as neighbour.
 
-    Functions \code{\link{Wf.sqrd}}, \code{\link{Wf.binary}},
-    \code{\link{Wf.PCNM}}, \code{\link{Wf.Drayf1}},
-    \code{\link{Wf.Drayf2}}, and \code{\link{Wf.Drayf3}} are not
-    intested to be called as is but through \code{\link{eigenmap}} (and
-    within \code{\link{eigenmap.score}}). Other, user-defined, function
-    can be used by \code{\link{eigenmap}} and should be visible to if
-    one wants to call \code{\link{eigenmap.score}} to obtain
-    predictors.
+    Functions \code{\link{Wf.sqrd}}, \code{\link{Wf.RBF}},
+    \code{\link{Wf.binary}}, \code{\link{Wf.PCNM}},
+    \code{\link{Wf.Drayf1}}, \code{\link{Wf.Drayf2}}, and
+    \code{\link{Wf.Drayf3}} are not intested to be called as is but
+    through \code{\link{eigenmap}} (and within
+    \code{\link{eigenmap.score}}). Other, user-defined, function can be
+    used by \code{\link{eigenmap}} and should be visible to if one wants
+    to call \code{\link{eigenmap.score}} to obtain predictors.
 
     For \code{\link{eigenmap.score}}, the distances between sampling
     locations and the targets locations must be of the same type as
@@ -178,6 +186,9 @@ map # plot(map)
 map <- eigenmap(x=Salmon[,"Position"],weighting=Wf.sqrd)
 map # plot(map)
 #
+map <- eigenmap(x=Salmon[,"Position"],weighting=Wf.RBF,wpar=0.001)
+map # plot(map)
+#
 ### Example 2: Using predictior scores
 #
 smpl <- c(4,7,10,14,34,56,61,64)  # A sample to discard
@@ -211,6 +222,9 @@ points(y=scr[,wh],x=Salmon[smpl,"Position"],pch=21,bg="black")
 #
 data(Mite)
 map <- eigenmap(x=as.matrix(mite.geo),weighting=Wf.sqrd)
+map # plot(map)
+#
+map <- eigenmap(x=as.matrix(mite.geo),weighting=Wf.RBF)
 map # plot(map)
 #
 }

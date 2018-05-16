@@ -36,7 +36,6 @@ eigenmap <- function(x,opt.coord=NA,weighting=Wf.sqrd,boundaries,wpar,select=.Ma
     else
       W <- weighting(D)
   }
-  diag(W) <- 0
   n <- nrow(W)
   colWbar <- matrix(colMeans(W),1L,n)
   MW <- mean(W)
@@ -57,9 +56,12 @@ eigenmap <- function(x,opt.coord=NA,weighting=Wf.sqrd,boundaries,wpar,select=.Ma
 #
 Wf.sqrd <- function(D) return(-0.5 * D)
 #
+Wf.RBF <- function(D,wpar=1) return(exp(-wpar * D**2))
+#
 Wf.binary <- function(D,boundaries) {
   b <- matrix(0, nrow(D), ncol(D))
   b[D > boundaries[1L] & D <= boundaries[2L]] <- 1
+  diag(b) <- 0
   return(b)
 }
 #
@@ -67,6 +69,7 @@ Wf.PCNM <- function(D,boundaries) {
   b <- Wf.binary(D, boundaries)
   a <- 1 - (D / (4 * boundaries[2L]))**2
   W <- b * a
+  diag(W) <- 0
   return(W)
 }
 #
@@ -74,6 +77,7 @@ Wf.Drayf1 <- function(D,boundaries) {
   b <- Wf.binary(D, boundaries)
   a <- 1 - D / max(D)
   W <- b * a
+  diag(W) <- 0
   return(W)
 }
 #
@@ -81,6 +85,7 @@ Wf.Drayf2 <- function(D,boundaries,wpar=1) {
   b <- Wf.binary(D, boundaries)
   a <- 1 - (D / max(D))^wpar
   W <- b * a
+  diag(W) <- 0
   return(W)
 }
 #
@@ -88,6 +93,7 @@ Wf.Drayf3 <- function(D,boundaries,wpar=1) {
   b <- Wf.binary(D, boundaries)
   a <- 1 / D^wpar
   W <- b * a
+  diag(W) <- 0
   return(W)
 }
 #

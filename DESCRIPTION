@@ -1,6 +1,6 @@
 Package: codep
-Version: 0.8-1
-Date: 2018-04-16
+Version: 0.9-1
+Date: 2018-05-16
 Type: Package
 Title: Multiscale Codependence Analysis
 Author: Guillaume Guenard and Pierre Legendre, Bertrand Pages
@@ -12,5 +12,5 @@ License: GPL-3
 LazyLoad: yes
 NeedsCompilation: yes
 Repository: CRAN
-Packaged: 2018-04-16 16:47:02 UTC; guenardg
-Date/Publication: 2018-04-16 16:59:09 UTC
+Packaged: 2018-05-16 20:04:28 UTC; guenardg
+Date/Publication: 2018-05-16 20:19:55 UTC
