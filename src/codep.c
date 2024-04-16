@@ -1,25 +1,45 @@
-/*******************************************************************
- C code to perform permutation testing Multi-scale Codependence
- Analysis (MCA). Handles both univeriate and multivariate testing.
- Guillaume Guenard - Universite de Montreal - 2008-2018
- C functions
-*******************************************************************/
+/*************************************************************************
+ 
+ (c) 2008-2023 Guillaume Guénard
+ Université de Montréal, Montreal, Quebec, Canada
+ 
+ **Permutation Test for Multiscale Codependence Analysis**
+ 
+ This file is part of codep
+ 
+ codep is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ codep is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with codep.  If not, see <https://www.gnu.org/licenses/>.
+ 
+ C functions definitions
+ 
+ *************************************************************************/
 
 // Includes
-#include<R.h>
-#include<Rmath.h>
 #include"codep.h"
 
 // C functions definition
-void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m, double *rx, double *us, int *n, int *perm_global, int *perm_ind, int *nperm, int *ind)
+void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m,
+                double *rx, double *us, int *n, int *perm_global, int *perm_ind,
+                int *nperm, int *ind)
 {
   double *uspY, uspx, *ssqhYi, ssqhY, *ssqrYi, ssqrY, ssqhx, ssqrx;
   double rnb, buffer;
-  int p, i, j, k, os1, os2, os3 = *m + *m;            // Here, i : rows and j : cols of Y; os1, os2, and os3 for table offsetting.
+  // Here, i : rows and j : cols of Y; os1, os2, and os3 for table offsetting.
+  int p, i, j, k, os1, os2, os3 = *m + *m;
   uspY = (double*)Calloc(*m, double);
   ssqhYi = (double*)Calloc(*m, double);
   ssqrYi = (double*)Calloc(*m, double);
-  GetRNGstate();                       // This call to insure the RNG is initialized.
+  GetRNGstate();                // This call to insure the RNG is initialized.
   for(p = 0; p < *nperm; p++)
   {
   // 1. Shuffling elements of rY and rx independently

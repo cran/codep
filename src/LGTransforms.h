@@ -3,7 +3,7 @@
  (c) 2008-2023 Guillaume Guénard
  Université de Montréal, Montreal, Quebec, Canada
  
- **Permutation Test for Multiscale Codependence Analysis**
+ **Legendre and Gallagher 2001 distance transformations**
  
  This file is part of codep
  
@@ -25,9 +25,9 @@
  *************************************************************************/
 
 // Defines
-#ifndef __codep_h__
+#ifndef __LGTransforms_h__
 
-#define __codep_h__
+#define __LGTransforms_h__
 
 // Includes
 #include<R.h>
@@ -36,8 +36,6 @@
 // Type declarations (empty)
 
 // C function declarations
-void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m,
-                double *rx, double *us, int *n, int *perm_global, int *perm_ind,
-                int *nperm, int *ind);
+void LGTr_C(double*, int*, int*, int*);
 
 #endif

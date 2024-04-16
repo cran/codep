@@ -3,7 +3,7 @@
  (c) 2008-2023 Guillaume Guénard
  Université de Montréal, Montreal, Quebec, Canada
  
- **Permutation Test for Multiscale Codependence Analysis**
+ **Geodesic Distances**
  
  This file is part of codep
  
@@ -25,19 +25,28 @@
  *************************************************************************/
 
 // Defines
-#ifndef __codep_h__
+#ifndef __geodists_h__
 
-#define __codep_h__
+#define __geodists_h__
+#define INTERRUPT_CHECK 10000
 
 // Includes
 #include<R.h>
-#include<Rmath.h>
+#include<math.h>
 
 // Type declarations (empty)
 
 // C function declarations
-void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m,
-                double *rx, double *us, int *n, int *perm_global, int *perm_ind,
-                int *nperm, int *ind);
+void dist_geo_hvs(double* from, double* to, int* n, int* tri,
+                  double* d,
+                  double* r);
+
+void dist_geo_vif(double* from, double* to, int* n, int* tri,
+                  double* d, int* niter,
+                  double* a, double* f, int* maxiter, double* tol);
+
+void dist_Euclid(double* from, double* to, int* n, int* tri, int* m,
+                 double* d,
+                 int* sq);
 
 #endif
