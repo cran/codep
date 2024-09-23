@@ -53,9 +53,9 @@
 #' the distribution of the product of two Fisher-Snedocor F statistics (see
 #' \link{product-distribution} for details).
 #' 
-#' @docType package
+#' @name codep_PACKAGE
 #' 
-#' @name codep-package
+#' @aliases codep-package
 #' 
 #' @details Function \code{\link{MCA}} performs Multiscale Codependence Analysis
 #' (MCA). Functions \code{\link{test.cdp}} and \code{\link{permute.cdp}} handle

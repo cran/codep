@@ -36,9 +36,9 @@ void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m,
   double rnb, buffer;
   // Here, i : rows and j : cols of Y; os1, os2, and os3 for table offsetting.
   int p, i, j, k, os1, os2, os3 = *m + *m;
-  uspY = (double*)Calloc(*m, double);
-  ssqhYi = (double*)Calloc(*m, double);
-  ssqrYi = (double*)Calloc(*m, double);
+  uspY = (double*)R_Calloc(*m, double);
+  ssqhYi = (double*)R_Calloc(*m, double);
+  ssqrYi = (double*)R_Calloc(*m, double);
   GetRNGstate();                // This call to insure the RNG is initialized.
   for(p = 0; p < *nperm; p++)
   {
@@ -118,8 +118,8 @@ void mcapermute(double *phi_global0, double *tau_ind0, double *rY, int *m,
       }
   }  // End of the permutation loop.
   // Free block
-  Free(ssqrYi);
-  Free(ssqhYi);
-  Free(uspY);
+  R_Free(ssqrYi);
+  R_Free(ssqhYi);
+  R_Free(uspY);
   return;
 }

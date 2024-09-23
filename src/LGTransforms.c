@@ -41,7 +41,7 @@ void LGTr_C(double* x, int* nr, int* nc, int* m) {
     }
     break;
   case 2:
-    csum = (double*)Calloc(*nc,double);
+    csum = (double*)R_Calloc(*nc,double);
     sum = 0.0;
     for(i = 0, idx = 0; i < *nc; i++) {
       for(j = 0, csum[i] = 0.0; j < *nr; j++, idx++)
@@ -57,7 +57,7 @@ void LGTr_C(double* x, int* nr, int* nc, int* m) {
       for(j = 0, idx = i; j < *nc; j++, idx += *nr)
         x[idx] = sum * x[idx] / (rsum * csum[j]);
     }
-    Free(csum);
+    R_Free(csum);
     break;
   case 3:
     for(i = 0; i < *nr; i++) {

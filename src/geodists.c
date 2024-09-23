@@ -36,10 +36,10 @@ void dist_geo_hvs(double* from, double* to, int* n, int* tri,
   radiusx2 = 2.0*(*r);
   end = (*tri) ? n[0]*(n[0]-1)/2 : n[0]*n[1];
   for(i = 0, j = (*tri) ? 1 : 0, k = 0; k < end; k++) {
-    LAT[0] = PI*from[i]/180.0;
-    LAT[1] = PI*to[j]/180.0;
+    LAT[0] = M_PI*from[i]/180.0;
+    LAT[1] = M_PI*to[j]/180.0;
     half_delta_lat = 0.5*(LAT[1] - LAT[0]);
-    half_delta_lon = 0.5*PI*(lon[1][j] - lon[0][i])/180.0;
+    half_delta_lon = 0.5*M_PI*(lon[1][j] - lon[0][i])/180.0;
     sin2_half_delta_lon = sin(half_delta_lon);
     sin2_half_delta_lon *= sin2_half_delta_lon;
     a = sin(half_delta_lat);
@@ -74,9 +74,9 @@ void dist_geo_vif(double* from, double* to, int* n, int* tri,
   int end, i, j, k;
   end = (*tri) ? n[0]*(n[0]-1)/2 : n[0]*n[1];
   for(i = 0, j = (*tri) ? 1 : 0, k = 0; k < end; k++) {
-    U[0] = atan((1.0 - (*f))*tan(PI*from[i]/180.0));
-    U[1] = atan((1.0 - (*f))*tan(PI*to[j]/180.0));
-    L = PI*(lon[1][j] - lon[0][i])/180.0;
+    U[0] = atan((1.0 - (*f))*tan(M_PI*from[i]/180.0));
+    U[1] = atan((1.0 - (*f))*tan(M_PI*to[j]/180.0));
+    L = M_PI*(lon[1][j] - lon[0][i])/180.0;
     lambda = L;
     cosU[0] = cos(U[0]);
     cosU[1] = cos(U[1]);
